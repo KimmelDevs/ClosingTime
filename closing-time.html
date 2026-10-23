@@ -90,7 +90,8 @@
   <p>October 31st. 2:13 AM.</p>
   <p>The Halvorsen Galleria has been closed for twenty years. In the morning, they tear it down.</p>
   <p>You took the last night shift because it paid double and nothing ever happens here.</p>
-  <p>Ten minutes ago the power died, and every shutter in the building came down at once.</p>
+  <p>The lights are still on. The music is still playing. Nobody has told the building it's dead.</p>
+  <p>Clock in at the security office. Relieve Dale. Easy money.</p>
 </div>
 
 <div class="screen" id="noteWrap"><div id="note"><h3 id="noteTitle"></h3><div id="noteBody"></div><div class="close">[E] PUT IT DOWN</div></div></div>
@@ -901,6 +902,7 @@ const gate = new THREE.Group(); scene.add(gate);
   const o = new THREE.Mesh(new THREE.PlaneGeometry(8, WH), new THREE.MeshBasicMaterial({ map: out })); o.rotation.y = Math.PI / 2; o.position.set(C + 0.05, WH / 2, 16 * C); scene.add(o);
 }
 addItem('gate', 2 * C + 0.6, 1.4, 16 * C, { mesh: gate });
+gate.position.y = WH - 0.4; // still up when you arrive; it slams down when the power dies
 
 // =====================================================================
 // AUDIO (all synthesized)
@@ -1019,6 +1021,14 @@ const SND = {
     tone('sine', 140, t, 0.001, 1.6, 0.6, comp, 28);
     if (customScare) { const s = AC.createBufferSource(); s.buffer = customScare; const g = AC.createGain(); g.gain.value = 1.2; s.connect(g).connect(AC.destination); s.start(t); }
   },
+  powerDown() {
+    if (!AC) return; const t = AC.currentTime;
+    const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(18, t + 2.2);
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t); lp.frequency.exponentialRampToValueAtTime(120, t + 2.2);
+    const g = AC.createGain(); env(g, t, 0.01, 0.35, 2.3); o.connect(lp).connect(g).connect(sfx); o.start(t); o.stop(t + 2.4);
+    tone('sine', 70, t, 0.002, 1.0, 1.4, sfx, 28); nburst(t, 0.5, 0.5, 'lowpass', 900, 0.7, sfx, 0.002);
+    humGain.gain.cancelScheduledValues(t); humGain.gain.setValueAtTime(humGain.gain.value, t); humGain.gain.linearRampToValueAtTime(0, t + 1.5);
+  },
   staticBlast() {
     if (!AC) return; const t = AC.currentTime;
     const n = noiseSrc(); const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.4;
@@ -1100,12 +1110,13 @@ function grainTick() { const d = grainImg.data; for (let i = 0; i < d.length; i 
 // =====================================================================
 // PLAYER
 // =====================================================================
-const SPAWN = { x: cx(4), z: cz(4), yaw: 0 };
-const player = { pos: new V3(SPAWN.x, 1.62, SPAWN.z), yaw: SPAWN.yaw, pitch: 0, stamina: 1, exhausted: false, battery: 1, flashOn: true, fuses: 0, stepAcc: 0, bob: 0, sprinting: false };
+const SPAWN = { x: cx(3) + 0.5, z: 16 * C, yaw: 0 };
+const RESPAWN = { x: cx(4), z: cz(4), yaw: 0 };
+const player = { pos: new V3(SPAWN.x, 1.62, SPAWN.z), yaw: SPAWN.yaw, pitch: 0, stamina: 1, exhausted: false, battery: 1, flashOn: false, fuses: 0, stepAcc: 0, bob: 0, sprinting: false };
 const keys = {};
 let state = 'title', paused = false;
 let flickerT = 0, shake = 0;
-const game = { power: false, gateOpen: false, blackout: 0, blackoutT: 8, readDale: false, leftOffice: false, fusesInstalled: false, paT: 70, musicT: 35, decoyT: 18, hbT: 0, sprintNoise: 0 };
+const game = { prePower: true, cutT: -1, power: false, gateOpen: false, blackout: 0, blackoutT: 8, readDale: false, leftOffice: false, fusesInstalled: false, paT: 70, musicT: 35, decoyT: 18, hbT: 0, sprintNoise: 0 };
 
 function circleBlocked(x, z, r) {
   const x0 = toCell(x - r), x1 = toCell(x + r), z0 = toCell(z - r), z1 = toCell(z + r);
@@ -1127,7 +1138,7 @@ function circleBlocked(x, z, r) {
   return false;
 }
 const flashActive = () => player.flashOn && player.battery > 0 && flickerT <= 0;
-const powerLit = () => game.power && game.blackout <= 0;
+const powerLit = () => (game.power || game.prePower) && game.blackout <= 0;
 
 function updatePlayer(dt) {
   let f = 0, s = 0;
@@ -1486,6 +1497,61 @@ function updateDecor(dt, t) {
 }
 
 // =====================================================================
+// OPENING: a lit, humming mall... until you clock in
+// =====================================================================
+const MUZAK = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]]; // Fmaj7 Em7 Dm7 Cmaj7
+const mtof = n => 440 * Math.pow(2, (n - 69) / 12);
+let muzak = null;
+function startMuzak() {
+  if (!AC || muzak) return;
+  muzak = { out: AC.createGain(), next: AC.currentTime + 0.2, i: 0, on: true };
+  const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+  muzak.out.gain.value = 0.9; muzak.out.connect(lp); lp.connect(master); lp.connect(conv);
+}
+function updateMuzak() {
+  if (!muzak || !muzak.on) return;
+  const t = AC.currentTime;
+  if (muzak.next < t) muzak.next = t + 0.05;
+  while (muzak.next < t + 0.3) {
+    const ch = MUZAK[muzak.i % 4];
+    for (const n of ch) tone('sine', mtof(n), muzak.next, 0.25, 0.022, 2.2, muzak.out);
+    tone('sine', mtof(ch[0] - 12), muzak.next, 0.05, 0.05, 2.0, muzak.out);
+    for (let k = 0; k < 3; k++) if (Math.random() < 0.7) tone('triangle', mtof(pick(ch) + 12), muzak.next + k * 0.8, 0.01, 0.02, 0.7, muzak.out);
+    muzak.next += 2.4; muzak.i++;
+  }
+}
+function stopMuzak() {
+  if (!muzak) return; muzak.on = false; const t = AC.currentTime;
+  muzak.out.gain.cancelScheduledValues(t); muzak.out.gain.setValueAtTime(muzak.out.gain.value, t); muzak.out.gain.linearRampToValueAtTime(0, t + 0.6);
+  tone('sawtooth', 320, t, 0.01, 0.03, 0.7, sfx, 35); // tape-stop groan
+}
+function updateOpening(dt) {
+  if (!game.prePower) return;
+  updateMuzak();
+  const px = toCell(player.pos.x), py = toCell(player.pos.z);
+  if (game.cutT < 0 && px >= 2 && px <= 7 && py >= 1 && py <= 5) game.cutT = 0; // you stepped into the security office
+  if (game.cutT < 0) return;
+  game.cutT += dt; const T = game.cutT;
+  // the lights stutter three times...
+  game.blackout = (T > 0.8 && T < 0.95) || (T > 1.3 && T < 1.42) || (T > 1.75 && T < 1.8) ? 1 : 0;
+  if (!game.cutBuzz && T > 0.8) { game.cutBuzz = true; SND.buzz(0.9); }
+  if (T < 2.3) return;
+  // ...then everything dies, and every shutter in the building comes down
+  game.prePower = false; game.blackout = 0; shake = 0.5;
+  SND.powerDown(); stopMuzak();
+  const t0 = performance.now();
+  const drop = () => { const k = Math.min(1, (performance.now() - t0) / 380); gate.position.y = (WH - 0.4) * (1 - k * k); if (k < 1) requestAnimationFrame(drop); };
+  drop();
+  [250, 700, 1150, 1700, 2300].forEach((ms, i) => setTimeout(() => { SND.thunk(rand(-0.9, 0.9), 0.55 - i * 0.08); nburst(AC.currentTime, 0.6, 0.15, 'lowpass', 400, 0.7, sfx, 0.01); }, ms));
+  setTimeout(() => {
+    if (state !== 'play') return;
+    player.flashOn = true; tone('square', 1800, AC.currentTime, 0.001, 0.04, 0.03, sfx);
+    toast('[F] Flashlight', 2.5);
+    setObj('Check the security desk');
+  }, 3200);
+}
+
+// =====================================================================
 // SCRIPTED SCARES — one-shot scenes that can't hurt you
 // =====================================================================
 const EV = { done: {}, t: 0, active: null, arcadeT: 0, wait: 0 };
@@ -1647,7 +1713,7 @@ function updateInteract() {
     if (d < bestD) { bestD = d; focus = it; }
   }
   const label = !focus ? '' : focus.kind === 'phone' ? '[E] Answer the phone' : focus.kind === 'note' ? '[E] Read' : focus.kind === 'fuse' ? '[E] Take fuse' : focus.kind === 'battery' ? '[E] Take batteries'
-    : focus.kind === 'breaker' ? (game.power ? 'Breaker: ON' : '[E] Breaker panel') : (game.gateOpen ? '' : '[E] Main gate');
+    : focus.kind === 'breaker' ? (game.power ? 'Breaker: ON' : '[E] Breaker panel') : (game.gateOpen || game.prePower ? '' : '[E] Main gate');
   $('prompt').textContent = label; $('prompt').style.opacity = label ? 1 : 0;
 }
 function interact() {
@@ -1673,6 +1739,7 @@ function interact() {
     powerUp(); return;
   }
   if (it.kind === 'gate') {
+    if (game.prePower) { toast('Your shift just started. Clock in at SECURITY first.'); return; }
     if (!game.power) { toast('Locked. No power to the shutter motor.'); if (game.readDale) setObj(player.fuses < 3 ? `Find fuses for the MAINTENANCE breaker (${player.fuses}/3)` : 'Install the fuses in the MAINTENANCE breaker'); return; }
     if (!game.gateOpen) openGate();
   }
@@ -1772,7 +1839,7 @@ function respawn() {
   camera.fov = 72; camera.updateProjectionMatrix(); renderer.domElement.style.filter = ''; if (iris.m.face) iris.m.face.visible = false;
   $('fade').style.transition = 'opacity 1.6s';
   if (AC) master.gain.setTargetAtTime(0.9, AC.currentTime, 0.5);
-  player.pos.set(SPAWN.x, 1.62, SPAWN.z); player.yaw = SPAWN.yaw; player.pitch = 0; player.stamina = 1;
+  player.pos.set(RESPAWN.x, 1.62, RESPAWN.z); player.yaw = RESPAWN.yaw; player.pitch = 0; player.stamina = 1;
   flowCell = -1; buildFlow();
   updatePlayer(0); camera.updateMatrixWorld();
   if (!teleportHidden(22, 60, true)) irisPlace(cx(40), cz(28));
@@ -1829,7 +1896,10 @@ $('title').addEventListener('click', () => {
   setTimeout(() => { $('intro').style.opacity = 0; }, 9000);
   setTimeout(() => {
     state = 'play'; $('hud').style.display = 'block'; $('fade').style.opacity = 0;
-    setObj('Check the security desk');
+    setObj('Clock in at the SECURITY office, north-west corner');
+    humGain.gain.setTargetAtTime(0.025, AC.currentTime, 0.5);
+    startMuzak();
+    setTimeout(() => pa('Good evening. The Halvorsen Galleria is now closed. Thank you for shopping with us.'), 2500);
   }, 10200);
 });
 
@@ -1850,6 +1920,7 @@ renderer.setAnimationLoop(() => {
     updateDecoys(dt);
     updateDecor(dt, gT);
     updateEvents(dt);
+    updateOpening(dt);
     updateInteract();
   } else if (state === 'dead') {
     deadT += dt;
