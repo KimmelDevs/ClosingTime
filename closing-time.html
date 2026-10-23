@@ -1862,8 +1862,17 @@ function endGame() {
 // INPUT
 // =====================================================================
 let noLock = false, dragging = false;
-function lockPointer() { if (noLock) return; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => { noLock = true; }); } catch (e) { noLock = true; } }
-document.addEventListener('pointerlockerror', () => { noLock = true; });
+// Capture the mouse. If the browser refuses, fall back to plain mouse movement so you can still look around.
+function lockPointer() {
+  try {
+    const r = renderer.domElement.requestPointerLock();
+    if (r && r.catch) r.catch(() => { noLock = true; lockHint(); });
+  } catch (e) { noLock = true; lockHint(); }
+}
+function lockHint() { if (state === 'play') toast('Mouse capture blocked. Move the mouse to look, or click the game to try again.', 4); }
+// clicking the game while the mouse isn't captured tries again
+renderer.domElement.addEventListener('mousedown', () => { if (state === 'play' && !paused && !document.pointerLockElement) { noLock = false; lockPointer(); } });
+document.addEventListener('pointerlockerror', () => { noLock = true; lockHint(); });
 document.addEventListener('pointerlockchange', () => {
   if (!document.pointerLockElement && state === 'play' && !reading && !noLock) { paused = true; $('pause').style.display = 'flex'; }
 });
@@ -1873,7 +1882,7 @@ addEventListener('mousedown', e => { dragging = true; if (state === 'play' && !p
 addEventListener('mouseup', () => { dragging = false; });
 addEventListener('mousemove', e => {
   if (state !== 'play' || paused || reading) return;
-  if (!document.pointerLockElement && !(noLock && dragging)) return;
+  if (!document.pointerLockElement && !noLock) return;
   player.yaw -= e.movementX * 0.0022; player.pitch = clamp(player.pitch - e.movementY * 0.0022, -1.35, 1.35);
 });
 addEventListener('keydown', e => {
