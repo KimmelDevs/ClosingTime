@@ -1,0 +1,36 @@
+; Engine configuration file.
+; Closing Time - Godot 4.7 port
+
+config_version=5
+
+[application]
+
+config/name="Closing Time"
+config/description="A first-person horror game in a dead mall."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+
+[audio]
+
+general/text_to_speech=true
+
+[autoload]
+
+Session="*res://scripts/session.gd"
+Sfx="*res://scripts/sfx.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[physics]
+
+common/physics_ticks_per_second=60
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=1
+lights_and_shadows/positional_shadow/atlas_size=4096
