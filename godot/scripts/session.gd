@@ -17,6 +17,7 @@ var pending_save: Dictionary = {}
 var settings := {"sens": 1.0, "vol": 0.9, "bright": 1.0, "fov": 72.0, "invert": false, "diff": "normal", "vfog": true}
 
 func _ready() -> void:
+	if "--night2" in OS.get_cmdline_user_args(): night = 2
 	load_settings()
 	setup_input()
 	setup_audio()

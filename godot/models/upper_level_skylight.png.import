@@ -3,22 +3,23 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwj0d3c64xlum"
-path="res://.godot/imported/upper_level_skylight.png-bda82859c6a329b7df6eae55fb7a42e4.ctex"
+path.s3tc="res://.godot/imported/upper_level_skylight.png-bda82859c6a329b7df6eae55fb7a42e4.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
-"md5": "76654034507c68f4878c9e295b0cd539"
+"md5": "7bfb4d65c17ab39ec01b9ae6a33069a6"
 }
 
 [deps]
 
 source_file="res://models/upper_level_skylight.png"
-dest_files=["res://.godot/imported/upper_level_skylight.png-bda82859c6a329b7df6eae55fb7a42e4.ctex"]
+dest_files=["res://.godot/imported/upper_level_skylight.png-bda82859c6a329b7df6eae55fb7a42e4.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -3,22 +3,23 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgjmfyq01egc3"
-path="res://.godot/imported/upper_level_ceiling.png-e39da203f73845592a08543641a04265.ctex"
+path.s3tc="res://.godot/imported/upper_level_ceiling.png-e39da203f73845592a08543641a04265.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
-"md5": "a1f842a2c9508f2bf4ce80ba39d566c9"
+"md5": "1676577fa38854b14734416373c918c5"
 }
 
 [deps]
 
 source_file="res://models/upper_level_ceiling.png"
-dest_files=["res://.godot/imported/upper_level_ceiling.png-e39da203f73845592a08543641a04265.ctex"]
+dest_files=["res://.godot/imported/upper_level_ceiling.png-e39da203f73845592a08543641a04265.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -3,22 +3,23 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://baomgoe8mwai6"
-path="res://.godot/imported/wall_wall.png-97fbbfb3b6f7801171b91666e693e95f.ctex"
+path.s3tc="res://.godot/imported/wall_wall.png-97fbbfb3b6f7801171b91666e693e95f.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
-"md5": "f98d1d2fd5e6ff720d27c6133d0c41cd"
+"md5": "5c14d913ffe1afce83d59e2c6833c6c7"
 }
 
 [deps]
 
 source_file="res://models/wall_wall.png"
-dest_files=["res://.godot/imported/wall_wall.png-97fbbfb3b6f7801171b91666e693e95f.ctex"]
+dest_files=["res://.godot/imported/wall_wall.png-97fbbfb3b6f7801171b91666e693e95f.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -66,7 +66,7 @@ save(img.convert('L'), 'floor_rough')
 
 # wall panel: 2m wide x 4m tall
 img = Image.new('RGBA', (256, 512), (180, 170, 152, 255))
-speckle(img, 4000, [(0, 0, 0, 14), (255, 255, 255, 14)], (2, 2))
+speckle(img, 1500, [(0, 0, 0, 6), (255, 255, 255, 8)], (1, 2))
 d = ImageDraw.Draw(img)
 d.rectangle([0, 512 - 46, 256, 512], fill=(91, 74, 59, 255))
 d.rectangle([0, 512 - 48, 256, 512 - 45], fill=(0, 0, 0, 90))
@@ -77,7 +77,7 @@ sd = ImageDraw.Draw(streaks)
 for _ in range(7):
     x, ln, wd = rng.uniform(0, 256), rng.uniform(60, 280), rng.uniform(3, 11)
     for k in range(int(ln)):
-        sd.line([(x, k), (x + wd, k)], fill=(70, 50, 30, int(90 * (1 - k / ln))))
+        sd.line([(x, k), (x + wd, k)], fill=(70, 50, 30, int(55 * (1 - k / ln))))
 img = Image.alpha_composite(img, streaks)
 img = grime(img, 6, 0.18)
 save(img, 'wall')

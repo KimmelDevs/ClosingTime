@@ -45,6 +45,8 @@ func _init() -> void:
 	build_hiding()
 	build_events()
 	build_lights()
+	build_polish()
+	build_occluders()
 	build_markers()
 	var ps := PackedScene.new()
 	var err := ps.pack(mall)
@@ -548,3 +550,33 @@ func build_markers() -> void:
 	for m in [["Spawn", Vector3(cx(3) + 0.5, 0, 16 * C), 0.0], ["Respawn", Vector3(cx(4), 0, cz(4)), 0.0], ["IrisStart", Vector3(cx(40), 0, cz(28)), 0.0], ["IrisStartNight2", Vector3(cx(50), 0, cz(8)), 0.0]]:
 		var mk := Marker3D.new(); add(M, mk, m[0]); mk.position = m[1]; mk.rotation.y = m[2]
 	var pr := Marker3D.new(); add(M, pr, "PedestalTop"); pr.position = Vector3(cx(store("window").item.x), 0.3, cz(store("window").item.y)); pr.rotation.y = PI / 2
+
+# ------------------------------------------------------------------ polish: 80s neon trim, shop lights
+func build_polish() -> void:
+	var neon := Node3D.new(); add(groups.Decor, neon, "HallNeon")
+	for t in [[7 * C + C / 2.0 + 0.23, Color("2ae6d4")], [24 * C + C / 2.0 - 0.23, Color("ff4fa8")]]:
+		var m := StandardMaterial3D.new(); m.resource_name = "hall_neon"; m.albedo_color = Color(0.07, 0.07, 0.07)
+		m.emission_enabled = true; m.emission = t[1]; m.emission_energy_multiplier = 0.1
+		var cm := CylinderMesh.new(); cm.top_radius = 0.025; cm.bottom_radius = 0.025; cm.height = 39 * C; cm.radial_segments = 8; cm.material = m
+		var mi := MeshInstance3D.new(); mi.mesh = cm; add(neon, mi, "Tube")
+		mi.position = Vector3(22 * C, WH - 1.03, t[0]); mi.rotation.z = PI / 2
+	var shop := Node3D.new(); add(groups.Lights, shop, "ShopLights")
+	for s in stores:
+		var l := OmniLight3D.new(); add(shop, l, "ShopLight")
+		l.position = Vector3((s.x0 + s.x1 + 1) / 2.0 * C, WH - 0.5, (s.y0 + s.y1 + 1) / 2.0 * C)
+		l.light_color = (s.color as Color).lerp(Color.WHITE, 0.6); l.light_energy = 0.0; l.omni_range = 7.0
+		l.add_to_group("shop_light", true)
+
+# ------------------------------------------------------------------ occlusion: box occluders over runs of wall cells
+func build_occluders() -> void:
+	var occ := Node3D.new(); add(groups.Structure, occ, "Occluders")
+	for y in H:
+		var x := 0
+		while x < W:
+			if gget(x, y) != WALL: x += 1; continue
+			var x0 := x
+			while x < W and gget(x, y) == WALL: x += 1
+			var n := x - x0
+			if n < 2: continue
+			var oi := OccluderInstance3D.new(); var bo := BoxOccluder3D.new(); bo.size = Vector3(n * C, WH, C)
+			oi.occluder = bo; add(occ, oi, "Occluder"); oi.position = Vector3(x0 * C + n * C / 2.0, WH / 2.0, cz(y))

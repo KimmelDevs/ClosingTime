@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://df0w8gcykhwn4"
-path="res://.godot/imported/banner_sale_banner_sale.png-3a5bbc8c85e487eb4dfd84b2e2c9ddf3.ctex"
+path.s3tc="res://.godot/imported/banner_sale_banner_sale.png-3a5bbc8c85e487eb4dfd84b2e2c9ddf3.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "655656a32e62d477534fcfab74646447"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://models/banner_sale_banner_sale.png"
-dest_files=["res://.godot/imported/banner_sale_banner_sale.png-3a5bbc8c85e487eb4dfd84b2e2c9ddf3.ctex"]
+dest_files=["res://.godot/imported/banner_sale_banner_sale.png-3a5bbc8c85e487eb4dfd84b2e2c9ddf3.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

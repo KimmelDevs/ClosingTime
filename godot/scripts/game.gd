@@ -43,6 +43,7 @@ var ev = {"done": {}, "active": "", "t": 0.0, "wait": 0.0, "balcony_n": 0, "arca
 var items: Array = []
 var hall_lights: Array = []
 var emergency: Array = []
+var shop_lights: Array = []
 var signs: Array = []
 var cams: Array = []
 var puddles: Array = []
@@ -89,6 +90,8 @@ func _ready() -> void:
 		if String(v.get("name", "")).to_lower().contains("zira") or String(v.get("name", "")).to_lower().contains("female"): tts_voice = v.id
 	ui.continue_btn.visible = not Session.load_save().is_empty()
 	ui.night2_btn.visible = Session.night == 1 and Session.night2_unlocked()
+	if "--playtest" in OS.get_cmdline_user_args():
+		var pt = Node.new(); pt.set_script(load("res://tools/playtest.gd")); add_child(pt)
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t = Node.new(); t.set_script(load("res://tools/autotest.gd")); add_child(t)
 	nav.bake_finished.connect(_on_baked)
@@ -114,6 +117,7 @@ func _collect() -> void:
 	for n in get_tree().get_nodes_in_group("interactable"): items.append(n)
 	for n in get_tree().get_nodes_in_group("hall_light"): hall_lights.append(n)
 	for n in get_tree().get_nodes_in_group("emergency_light"): emergency.append(n)
+	for n in get_tree().get_nodes_in_group("shop_light"): shop_lights.append(n)
 	for n in get_tree().get_nodes_in_group("sign"): signs.append(n)
 	for n in get_tree().get_nodes_in_group("puddle"): puddles.append(n)
 	for n in get_tree().get_nodes_in_group("security_camera"):
@@ -121,11 +125,13 @@ func _collect() -> void:
 	for mi in mall.find_children("*", "MeshInstance3D", true, false):
 		var m = mi as MeshInstance3D
 		if m.mesh == null: continue
+		if m.mesh is PrimitiveMesh and (m.mesh as PrimitiveMesh).material and (m.mesh as PrimitiveMesh).material.resource_name == "hall_neon":
+			mats["hall_neon"] = (m.mesh as PrimitiveMesh).material
 		for i in m.mesh.get_surface_count():
 			var mat = m.mesh.surface_get_material(i) as StandardMaterial3D
 			if mat == null: continue
 			var nm = mat.resource_name
-			if nm in ["light_panel", "screen", "pumpkin", "balcony_neon", "tree_bulbs", "vending_glow", "camera_led", "fuse_glow", "note", "breaker_lights", "skylight"]:
+			if nm in ["light_panel", "screen", "pumpkin", "balcony_neon", "tree_bulbs", "vending_glow", "camera_led", "fuse_glow", "note", "breaker_lights", "skylight", "hall_neon"]:
 				if not mats.has(nm): mats[nm] = mat
 
 func _connect_ui() -> void:
@@ -187,14 +193,21 @@ func _ready_deferred_save() -> void:
 		ui.title.visible = false; _apply_save(sv); _begin_play()
 
 # ---------------------------------------------------------------- input
+func _input(e: InputEvent) -> void:
+	# grab the mouse again whenever you click the game while it's free (alt-tab, focus loss)
+	if state == "play" and not paused and reading == "" and e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		get_viewport().set_input_as_handled()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "play" and not paused and reading == "": _toggle_pause()
+
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("pause"):
 		if state == "play" and reading == "": _toggle_pause()
 		elif reading != "": _close_note()
 		return
 	if state != "play" or paused: return
-	if e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED; return
 	if e.is_action_pressed("interact"):
 		if reading != "": _close_note()
 		else: _interact()
@@ -249,13 +262,15 @@ func _update_world(dt: float) -> void:
 			if blackout_t <= 0.0: blackout = ln; Sfx.play("buzz", -10)
 	var lit = power_lit()
 	for l in hall_lights:
-		var v = 1.6 if lit else 0.0
+		var v = 2.6 if lit else 0.0
 		if lit and l.get_meta("flicker", false) and randf() < 0.06: v *= randf() * 0.3
 		(l as OmniLight3D).light_energy = v
 	env.ambient_light_energy = 0.9 if lit else 0.25
+	for l in shop_lights: (l as OmniLight3D).light_energy = 0.7 if lit else 0.0
 	_set_emit("light_panel", 1.6 if lit else 0.0)
 	_set_emit("screen", (2.0 + randf() * 3.0 if randf() > 0.3 else 0.0) if ev.arcade_t > 0.0 else (0.9 if lit else 0.12) * randf_range(0.85, 1.15))
 	_set_emit("balcony_neon", 2.2 if lit else 0.06)
+	_set_emit("hall_neon", (2.2 if lit else 0.06) * (0.2 if randf() < 0.02 else 1.0))
 	_set_emit("vending_glow", 1.5 if lit else 0.05)
 	_set_emit("pumpkin", randf_range(0.7, 1.05))
 	_set_emit("tree_bulbs", 1.6 if fmod(Time.get_ticks_msec() / 1000.0, 1.0) < 0.5 else 0.2)

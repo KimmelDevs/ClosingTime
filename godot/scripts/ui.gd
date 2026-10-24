@@ -57,6 +57,7 @@ func _ready() -> void:
 	var sm := ShaderMaterial.new(); sm.shader = load("res://shaders/post.gdshader"); post.material = sm
 	add_child(post)
 	_build_hud()
+	_ignore_mouse(hud)   # the HUD must never eat mouse-look or clicks
 	flash_white = _rect(Color.WHITE); flash_white.modulate.a = 0.0
 	fade = _rect(Color.BLACK)
 	_build_note(); _build_title(); _build_intro(); _build_pause(); _build_settings(); _build_death(); _build_end()
@@ -124,6 +125,10 @@ func _build_hud() -> void:
 	var bl := _label("HOLD [SPACE] / RIGHT MOUSE / B TO HOLD YOUR BREATH", 12, Color("b9b09f"), title_font); bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	breath_box.add_child(bl); breath_bar = _bar(Color("cfc6b4")); breath_bar.custom_minimum_size = Vector2(420, 6); breath_box.add_child(breath_bar)
 	var lv := _label("[E] LEAVE", 12, Color("b9b09f"), title_font); lv.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; breath_box.add_child(lv)
+
+func _ignore_mouse(n: Node) -> void:
+	if n is Control: (n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in n.get_children(): _ignore_mouse(c)
 
 func _center_h(c: Control, y_frac: float, w := 700.0) -> void:
 	c.anchor_left = 0.5; c.anchor_right = 0.5; c.anchor_top = y_frac; c.anchor_bottom = y_frac

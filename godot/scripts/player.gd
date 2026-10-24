@@ -43,12 +43,14 @@ var _foot = 1
 func _ready() -> void:
 	flash.light_energy = 0.0
 
-func _unhandled_input(e: InputEvent) -> void:
+# _input (not _unhandled_input) so no GUI element can swallow mouse-look
+func _input(e: InputEvent) -> void:
 	if not controls_enabled: return
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var k = 0.0022 * float(Session.settings.sens)
-		yaw -= e.relative.x * k
-		pitch = clamp(pitch - e.relative.y * k * (-1.0 if Session.settings.invert else 1.0), -1.35, 1.35)
+		var rel: Vector2 = e.screen_relative   # raw screen pixels: same feel at any window size
+		yaw -= rel.x * k
+		pitch = clamp(pitch - rel.y * k * (-1.0 if Session.settings.invert else 1.0), -1.35, 1.35)
 
 func flash_active() -> bool:
 	return flash_on and battery > 0.0 and flicker_t <= 0.0 and not cranking and hidden_in == null
