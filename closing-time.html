@@ -28,7 +28,7 @@
   #stamBar > i { background:#8fa3b8; }
   #toast { position:fixed; left:50%; top:30%; transform:translateX(-50%); font-size:20px; letter-spacing:.2em; text-transform:uppercase; opacity:0; transition:opacity .5s; text-shadow:0 0 10px #000; text-align:center; }
   .screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:16px; }
-  #title { background:radial-gradient(ellipse at 50% 40%, #1a1512 0%, #050404 70%); cursor:pointer; z-index:20; }
+  #title { background:radial-gradient(ellipse at 50% 40%, #1a1512 0%, #050404 70%); z-index:20; }
   #title h1 { font-size:clamp(48px,10vw,120px); margin:0; font-weight:700; letter-spacing:.18em; color:#e8e0cf; text-shadow:0 0 30px rgba(255,80,60,.25); animation:flick 6s infinite; }
   #title h2 { font-family:'Special Elite',monospace; font-weight:400; color:#a39a88; letter-spacing:.12em; margin:6px 0 40px; font-size:clamp(14px,2.2vw,20px); }
   #title .go { font-size:18px; letter-spacing:.4em; border:1px solid #6b6255; padding:12px 26px; animation:pulse 2.4s infinite; }
@@ -44,15 +44,27 @@
   #note h3 { margin:0 0 14px; font-size:13px; letter-spacing:.2em; color:#6d5d45; text-transform:uppercase; }
   #note .close { margin-top:22px; font-size:12px; color:#7a6a52; letter-spacing:.15em; }
   #note .lip { color:#a3141c; font-size:22px; }
-  #pause { z-index:14; background:rgba(0,0,0,.7); display:none; cursor:pointer; }
-  #pause div { font-size:26px; letter-spacing:.35em; }
+  #pause { z-index:14; background:rgba(0,0,0,.78); display:none; }
+  #pause h2 { font-size:26px; letter-spacing:.35em; font-weight:500; margin:0 0 24px; }
+  .menu { display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .btn { background:none; color:#cfc6b4; border:1px solid #6b6255; padding:10px 26px; min-width:240px; font-family:'Oswald'; font-size:15px; letter-spacing:.3em; cursor:pointer; text-transform:uppercase; }
+  .btn:hover, .btn:focus { background:rgba(233,226,212,.08); border-color:#cfc6b4; outline:none; }
+  .btn.sel { background:#cfc6b4; color:#0b0a09; }
+  .row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .row .btn { min-width:0; padding:8px 16px; font-size:13px; }
+  #settings { z-index:26; background:rgba(0,0,0,.9); display:none; }
+  #settings label { display:flex; justify-content:space-between; align-items:center; gap:20px; width:min(440px,90vw); font-size:14px; letter-spacing:.2em; margin:8px 0; color:#cfc6b4; }
+  #settings input[type=range] { width:200px; accent-color:#cfc6b4; }
+  #hideVig { background:radial-gradient(ellipse at center, rgba(0,0,0,0) 18%, rgba(0,0,0,.92) 62%); opacity:0; transition:opacity .4s; }
+  #breathWrap { display:none; position:fixed; left:50%; bottom:16%; transform:translateX(-50%); text-align:center; font-size:12px; letter-spacing:.25em; color:#b9b09f; }
+  #breathWrap .bar { margin:6px auto; width:220px; }
   #dead { z-index:16; display:none; background:linear-gradient(transparent 40%, rgba(40,0,0,.85)); cursor:pointer; justify-content:flex-end !important; padding-bottom:9vh !important; }
   #dead h1 { font-size:clamp(30px,6vw,64px); letter-spacing:.2em; margin:0; color:#f1d8d0; }
   #dead p { font-family:'Special Elite',monospace; color:#d1a9a0; letter-spacing:.1em; }
   #end { z-index:18; display:none; background:#000; font-family:'Special Elite',monospace; font-size:clamp(15px,2vw,21px); line-height:1.8; }
   #end p { max-width:700px; opacity:0; transition:opacity 2s; margin:0 0 14px; }
   #end h1 { font-family:'Oswald'; letter-spacing:.3em; font-size:clamp(34px,6vw,70px); opacity:0; transition:opacity 3s; margin-top:24px; }
-  #end button { margin-top:30px; opacity:0; transition:opacity 2s; background:none; color:#cfc6b4; border:1px solid #6b6255; padding:10px 24px; font-family:'Oswald'; letter-spacing:.3em; cursor:pointer; pointer-events:auto; }
+  #end .row { margin-top:30px; opacity:0; transition:opacity 2s; }
 </style>
 </head>
 <body>
@@ -67,22 +79,31 @@
   <div id="prompt"></div>
   <div id="sub"></div>
   <div id="toast"></div>
+  <div id="breathWrap">HOLD [SPACE] / RIGHT MOUSE TO HOLD YOUR BREATH<div class="bar" id="breathBar"><i></i></div>[E] LEAVE</div>
   <div id="stats">
     <div>FUSES <span id="fuseCount">0</span>/3</div>
     <div style="margin-top:10px">FLASHLIGHT</div><div class="bar" id="batBar"><i></i></div>
     <div>STAMINA</div><div class="bar" id="stamBar"><i></i></div>
+    <div id="diffTag" style="font-size:10px;color:#6b6255"></div>
   </div>
 </div>
 
+<div class="layer" id="hideVig"></div>
 <div class="layer" id="flashw" style="background:#fff;opacity:0"></div>
 <div class="layer" id="fade"></div>
 
 <div class="screen" id="title">
   <h1>CLOSING TIME</h1>
   <h2>Halvorsen Galleria &mdash; the last shift</h2>
-  <div class="go">CLICK TO CLOCK IN</div>
+  <div class="menu">
+    <div class="row" id="diffRow"><button class="btn" data-diff="easy">Easy</button><button class="btn" data-diff="normal">Normal</button><button class="btn" data-diff="nightmare">Nightmare</button></div>
+    <button class="btn" id="bContinue" style="display:none">Continue</button>
+    <button class="btn" id="bNew">New shift</button>
+    <button class="btn" id="bNight2" style="display:none">Night 2</button>
+    <button class="btn" id="bSettingsT">Settings</button>
+  </div>
   <div id="loadNote" style="margin-top:14px;color:#6b6255;font-size:12px;letter-spacing:.25em">LOADING SOMETHING&hellip;</div>
-  <div class="keys">WASD move &middot; MOUSE look &middot; SHIFT run &middot; F flashlight &middot; E interact &middot; ESC pause</div>
+  <div class="keys">WASD move &middot; MOUSE look &middot; SHIFT run &middot; F flashlight &middot; E interact / hide &middot; hold C wind flashlight &middot; SPACE hold breath &middot; ESC pause<br>Controller: left stick move &middot; right stick look &middot; A interact &middot; X flashlight &middot; Y wind &middot; RT run &middot; LT/B hold breath &middot; START pause</div>
   <div class="warn">HEADPHONES RECOMMENDED &middot; CONTAINS JUMP SCARES AND FLASHING LIGHTS</div>
 </div>
 
@@ -95,17 +116,23 @@
 </div>
 
 <div class="screen" id="noteWrap"><div id="note"><h3 id="noteTitle"></h3><div id="noteBody"></div><div class="close">[E] PUT IT DOWN</div></div></div>
-<div class="screen" id="pause"><div>PAUSED</div><p style="color:#8d8577;letter-spacing:.2em">CLICK TO RESUME</p></div>
+<div class="screen" id="pause"><h2>PAUSED</h2><div class="menu">
+  <button class="btn" id="bResume">Resume</button>
+  <button class="btn" id="bSettingsP">Settings</button>
+  <button class="btn" id="bLoad">Load checkpoint</button>
+  <button class="btn" id="bQuit">Quit to title</button>
+</div></div>
+<div class="screen" id="settings"><h2 style="letter-spacing:.35em;font-weight:500">SETTINGS</h2>
+  <label>MOUSE SENSITIVITY <input type="range" id="sSens" min="0.3" max="3" step="0.05"></label>
+  <label>VOLUME <input type="range" id="sVol" min="0" max="1" step="0.02"></label>
+  <label>BRIGHTNESS <input type="range" id="sBright" min="0.6" max="2" step="0.05"></label>
+  <label>FIELD OF VIEW <input type="range" id="sFov" min="60" max="95" step="1"></label>
+  <label>INVERT LOOK Y <input type="checkbox" id="sInvert"></label>
+  <button class="btn" id="bBack" style="margin-top:18px">Back</button>
+</div>
 <div class="screen" id="dead"><h1>SHE KEPT YOU</h1><p>&hellip;for closing.</p><p style="font-family:Oswald;letter-spacing:.3em;font-size:13px;color:#a77">CLICK TO TRY AGAIN</p></div>
-<div class="screen" id="end">
-  <p>The shutter groans up. Cold air. Sodium lights humming over an empty parking lot.</p>
-  <p>Behind you, the shutter rattles back down on its own.</p>
-  <p>At 7:00 AM the demolition foreman does the final walkthrough and counts the display figures for the salvage sheet.</p>
-  <p>Thirty-one. Thirty-two. Thirty-three.</p>
-  <p>The new one stands in the atrium window, beside the girl in the red dress. It wears a security uniform. The name tag reads DALE.</p>
-  <p>Both of them are facing the doors.</p>
-  <h1>CLOSING TIME</h1>
-  <button onclick="location.reload()">PLAY AGAIN</button>
+<div class="screen" id="end"><div id="endText"></div><h1 id="endTitle">CLOSING TIME</h1>
+  <div class="row"><button class="btn" id="bAgain">Play again</button><button class="btn" id="bToNight2">Night 2 &rarr;</button></div>
 </div>
 
 <script type="importmap">
@@ -115,6 +142,16 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 const $ = id => document.getElementById(id);
+const QS = new URLSearchParams(location.search);
+const NIGHT = QS.get('night') === '2' ? 2 : 1;
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
+const SETTINGS = Object.assign({ sens: 1, vol: 0.9, bright: 1.2, fov: 72, invert: false, diff: 'normal' }, store.get('closingtime.settings', {}));
+const DIFFS = {
+  easy: { speed: 0.8, appear: 1.4, drain: 0.6, lunge: 2.4, decoysWalk: false },
+  normal: { speed: 1, appear: 1, drain: 1, lunge: 3.2, decoysWalk: false },
+  nightmare: { speed: 1.25, appear: 0.7, drain: 1.4, lunge: 3.8, decoysWalk: true },
+};
+let DIFF = DIFFS[SETTINGS.diff] || DIFFS.normal;
 const V3 = THREE.Vector3;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -127,7 +164,7 @@ const spick = arr => arr[Math.floor(srand() * arr.length)];
 // =====================================================================
 // MAP — grid of 2m cells
 // =====================================================================
-const W = 44, H = 32, C = 2, WH = 4;
+const W = 60, H = 32, C = 2, WH = 4;
 const FLOOR = 0, WALL = 1, GLASS = 2, PROP = 3, GATE = 4;
 const grid = new Uint8Array(W * H).fill(WALL);
 const propR = new Float32Array(W * H);   // 0 = full-cell blocker, >0 = round blocker radius
@@ -165,6 +202,11 @@ rect(33, 13, 36, 18, FLOOR); for (let y = 13; y <= 18; y++) { set(32, y, GLASS);
 set(32, 15, FLOOR); set(32, 16, FLOOR);
 stores.push({ name: 'PHOTO HUT', kind: 'photo', color: '#80ffd0', x0: 33, y0: 13, x1: 36, y1: 18, face: 'w' });
 for (let y = 14; y <= 17; y++) set(1, y, GATE);
+// HALVORSEN & CO. department store wing, behind a security grille (open on Night 2)
+rect(43, 4, 58, 27, FLOOR);
+for (const y of [15, 16]) set(42, y, NIGHT === 2 ? FLOOR : GATE);
+// dead escalators in the atrium (blocked)
+rect(13, 12, 16, 12, PROP); rect(27, 19, 30, 19, PROP);
 
 for (const s of stores) {
   const ns = s.face === 's' || s.face === 'n';
@@ -200,13 +242,13 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = SETTINGS.bright;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x020203);
 scene.fog = new THREE.FogExp2(0x030304, 0.05);
-const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.05, 90);
+const camera = new THREE.PerspectiveCamera(SETTINGS.fov, innerWidth / innerHeight, 0.05, 90);
 camera.rotation.order = 'YXZ';
 scene.add(camera);
 addEventListener('resize', () => {
@@ -366,13 +408,87 @@ const cyl = (rt, rb, h, mat, x, y, z, parent = scene, seg = 20) => {
 // =====================================================================
 // BUILD THE MALL
 // =====================================================================
+var upperNeon; // filled by buildUpperLevel, merged into neonMats later
+// The second floor: a balcony ring around the atrium opening. You can't get up there. Something else can.
+function buildUpperLevel(ceilPart) {
+  const hx0 = 26, hx1 = 62, hz0 = 24, hz1 = 40, ox0 = 22, ox1 = 66, oz0 = 20, oz1 = 44, FL = 4.35, TOP = 8.6;
+  const ft = floorTex.clone(); ft.needsUpdate = true; ft.repeat.set(10, 6);
+  const floorMat = new THREE.MeshStandardMaterial({ map: ft, roughness: 0.5 });
+  const slab = (x0, x1, z0, z1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), floorMat); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, FL, (z0 + z1) / 2); m.receiveShadow = true; scene.add(m); };
+  slab(ox0, ox1, oz0, hz0); slab(ox0, ox1, hz1, oz1); slab(ox0, hx0, hz0, hz1); slab(hx1, ox1, hz0, hz1);
+  const neon = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x2ae6d4, emissiveIntensity: 0.1 });
+  upperNeon = [neon];
+  const glassRail = new THREE.MeshStandardMaterial({ color: 0x9fb2bd, roughness: 0.05, metalness: 0.5, transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide });
+  // fascia, neon trim and railing along each edge of the opening
+  for (const [x0, z0, x1, z1] of [[hx0, hz0, hx1, hz0], [hx0, hz1, hx1, hz1], [hx0, hz0, hx0, hz1], [hx1, hz0, hx1, hz1]]) {
+    const len = Math.hypot(x1 - x0, z1 - z0), mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, alongX = z0 === z1;
+    box(alongX ? len + 0.3 : 0.3, 0.5, alongX ? 0.3 : len + 0.3, M.laminate, mx, FL - 0.2, mz);
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, len, 8), neon); t.position.set(mx, FL - 0.42, mz); t.rotation.set(alongX ? 0 : Math.PI / 2, 0, alongX ? Math.PI / 2 : 0); scene.add(t);
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.0), glassRail); g.position.set(mx, FL + 0.55, mz); if (!alongX) g.rotation.y = Math.PI / 2; scene.add(g);
+    const r = cyl(0.03, 0.03, len, M.metal, mx, FL + 1.08, mz); r.rotation.set(alongX ? 0 : Math.PI / 2, 0, alongX ? Math.PI / 2 : 0);
+    for (let k = 0; k <= len; k += 3) cyl(0.025, 0.025, 1.08, M.metal, alongX ? x0 + k : mx, FL + 0.54, alongX ? mz : z0 + k);
+  }
+  // upper storefront walls with dark, dead shop openings
+  const UP_SIGNS = ['CINEMA 4', 'FOOD TERRACE', 'KIDS WORLD', 'RADIO HUT', 'GLAMOUR SHOTS', 'HALVORSEN & CO.  LEVEL 2'];
+  let si = 0;
+  for (const [x0, z0, x1, z1, nx, nz] of [[ox0, oz0, ox1, oz0, 0, 1], [ox0, oz1, ox1, oz1, 0, -1], [ox0, oz0, ox0, oz1, 1, 0], [ox1, oz0, ox1, oz1, -1, 0]]) {
+    const len = Math.hypot(x1 - x0, z1 - z0), mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, alongX = z0 === z1;
+    const wt = wallTex.clone(); wt.needsUpdate = true; wt.repeat.set(len / 2.5, 1);
+    box(alongX ? len : 0.4, TOP - FL, alongX ? 0.4 : len, new THREE.MeshStandardMaterial({ map: wt, roughness: 0.9, color: 0xb8ad9c }), mx, (FL + TOP) / 2, mz);
+    for (let k = 3.5; k < len - 2; k += 7.5) {
+      const px = alongX ? x0 + k : mx + nx * 0.22, pz = alongX ? mz + nz * 0.22 : z0 + k;
+      const hole = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.9), new THREE.MeshBasicMaterial({ color: 0x020202 }));
+      hole.position.set(px, FL + 1.45, pz); hole.rotation.y = Math.atan2(nx, nz); scene.add(hole);
+      const tex = signTex(UP_SIGNS[si++ % UP_SIGNS.length], spick(['#e8d8a0', '#ff8fb8', '#8fe0ff', '#c58cff']));
+      const sm = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.04 });
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.55), sm); sg.position.set(px + nx * 0.01, FL + 3.3, pz + nz * 0.01); sg.rotation.y = hole.rotation.y; scene.add(sg);
+    }
+  }
+  // upper ceiling and the big skylight
+  ceilPart(ox0, ox1, oz0, hz0, TOP); ceilPart(ox0, ox1, hz1, oz1, TOP); ceilPart(ox0, hx0, hz0, hz1, TOP); ceilPart(hx1, ox1, hz0, hz1, TOP);
+  const skyTex = canvasTex(512, 256, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#1d2740'); gr.addColorStop(1, '#0a0e18'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    for (let k = 0; k < 40; k++) { g.fillStyle = 'rgba(220,230,255,.6)'; g.fillRect(srand() * w, srand() * h, 1.5, 1.5); }
+    g.strokeStyle = '#05060a'; g.lineWidth = 8; for (let x = 0; x <= w; x += 64) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y <= h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+    g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(64 * 3 + 4, 64 + 4, 56, 56); // one broken pane, boarded
+  });
+  const sk = new THREE.Mesh(new THREE.PlaneGeometry(hx1 - hx0, hz1 - hz0), new THREE.MeshStandardMaterial({ map: skyTex, emissive: 0xffffff, emissiveMap: skyTex, emissiveIntensity: 0.45 }));
+  sk.rotation.x = Math.PI / 2; sk.position.set((hx0 + hx1) / 2, TOP - 0.01, (hz0 + hz1) / 2); scene.add(sk);
+}
+// A dead escalator rising from the atrium floor to the balcony, chained off.
+const outOfOrderTex = (() => {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96; const g = c.getContext('2d');
+  g.fillStyle = '#e2c21c'; g.fillRect(0, 0, 256, 96); g.fillStyle = '#111'; g.font = '700 38px Oswald, Impact'; g.textAlign = 'center'; g.fillText('OUT OF ORDER', 128, 62);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+function escalator(xBottom, xTop, z) {
+  const len = Math.abs(xTop - xBottom), dir = Math.sign(xTop - xBottom), rise = 4.35, slope = Math.hypot(len, rise), ang = Math.atan2(rise, len);
+  const g = new THREE.Group(); g.position.set((xBottom + xTop) / 2, rise / 2, z); g.rotation.z = dir * ang; scene.add(g);
+  const stepTex = canvasTex(256, 64, (c, w, h) => { c.fillStyle = '#4a4c4f'; c.fillRect(0, 0, w, h); c.fillStyle = '#2b2c2e'; for (let x = 0; x < w; x += 6) c.fillRect(x, 0, 2, h); for (let x = 0; x < w; x += 32) { c.fillStyle = '#c9b028'; c.fillRect(x, 0, 2, h); c.fillStyle = '#2b2c2e'; } });
+  stepTex.repeat.set(slope / 2, 1);
+  box(slope, 0.25, 1.1, new THREE.MeshStandardMaterial({ map: stepTex, roughness: 0.5, metalness: 0.6 }), 0, 0, 0, g);
+  box(slope, 0.6, 1.05, M.dark, 0, -0.42, 0, g);
+  for (const sz of [-0.62, 0.62]) {
+    box(slope, 0.9, 0.1, M.laminate, 0, 0.55, sz, g);
+    const hr = cyl(0.05, 0.05, slope + 0.6, M.dark, 0, 1.03, sz, g); hr.rotation.z = Math.PI / 2;
+  }
+  const bx = xBottom - dir * 0.7;
+  for (const sz of [-0.7, 0.7]) cyl(0.03, 0.05, 1.0, M.metal, bx, 0.5, z + sz);
+  for (let k = 0; k < 8; k++) { const l = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 10), M.metal); l.position.set(bx, 0.8 - Math.sin(k / 7 * Math.PI) * 0.12, z - 0.7 + k * 0.2); l.rotation.y = k % 2 ? Math.PI / 2 : 0; scene.add(l); }
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.26), new THREE.MeshStandardMaterial({ map: outOfOrderTex, side: THREE.DoubleSide }));
+  sign.position.set(bx - dir * 0.02, 0.62, z); sign.rotation.y = -dir * Math.PI / 2; scene.add(sign);
+}
 { // floor + ceiling
   const f = new THREE.Mesh(new THREE.PlaneGeometry(W * C, H * C), M.floor);
   f.rotation.x = -Math.PI / 2; f.position.set(W * C / 2, 0, H * C / 2); f.receiveShadow = true; scene.add(f);
-  const c = new THREE.Mesh(new THREE.PlaneGeometry(W * C, H * C), M.ceil);
-  c.rotation.x = Math.PI / 2; c.position.set(W * C / 2, WH, H * C / 2); scene.add(c);
-  const sky = new THREE.Mesh(new THREE.PlaneGeometry(34, 14), M.sky);
-  sky.rotation.x = Math.PI / 2; sky.position.set(22 * C, WH - 0.02, 16 * C); scene.add(sky);
+  // ceiling with a hole over the atrium: x 26..62, z 24..40
+  const ceilPart = (x0, x1, z0, z1, y = WH) => {
+    const t = ceilTex.clone(); t.needsUpdate = true; t.repeat.set((x1 - x0) / 2, (z1 - z0) / 2);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ map: t, roughness: 1 }));
+    m.rotation.x = Math.PI / 2; m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); scene.add(m); return m;
+  };
+  ceilPart(0, W * C, 0, 24); ceilPart(0, W * C, 40, H * C); ceilPart(0, 26, 24, 40); ceilPart(62, W * C, 24, 40);
+  buildUpperLevel(ceilPart);
 }
 { // walls (instanced)
   const cells = [];
@@ -549,6 +665,8 @@ const NOTES = {
   poster: { title: 'Poster, peeling off the fitting-room door', body: `MISSING<br><br>IRIS HALVORSEN, 19<br><br>Last seen November 1st, 1989, at closing time inside the Halvorsen Galleria. Wearing a red dress.<br><br>If you have any information, please call &mdash; <br><br><i>(the number has been scratched out. Underneath, in lipstick:)</i><br><span class="lip">SHE NEVER LEFT</span>` },
   janitor: { title: 'Note on the florist counter', body: `Counted the figures at close: 31.<br>Counted again at open: 32.<br><br>The new one was in here. In the florist. Holding the dead roses like it was waiting for somebody to take her to a dance.<br><br>Nobody believes me. I'm putting in for days.<br><br>&mdash; R. Okafor, custodial` },
   father: { title: 'Letter, tucked inside a book', body: `To the Board,<br><br>You will not close this mall. Not while I am alive.<br><br>My daughter walked into this building and never walked out, and the police have stopped looking. If she is still inside, then the doors must stay open and the lights must stay on. Play the announcements. Every night.<br><br>She always loved closing time. The empty halls. The music. She used to say the mall was <i>hers</i> after hours.<br><br>&mdash; A. Halvorsen, 1991` },
+  rule2: { title: 'Taped to the inside of the shutter', body: `You came back. Good. Listen.<br><br>She's different tonight. The power is on, and she knows the lights now.<br><br>When the lights are ON, nothing moves. Not her. Not any of them.<br><br>When they go OUT, she comes. Your beam still holds her in the dark.<br><br>Dale is in the department store, east end. The grille is open. I don't know who opened it.<br><br>&mdash; R. Okafor` },
+  dale3: { title: "Cassette in Dale's shirt pocket (transcribed)", body: `...if anybody finds this.<br><br>I found where she keeps them. The department store. Every one of these figures was a guard once. I recognise the shoes.<br><br>She isn't cruel. She just doesn't want to be alone at closing. Her father kept the doors open for her and she thinks that means somebody has to stay.<br><br>I'm so tired. I'm going to stand still for a while. It's warm here. It's bright.<br><br>Whoever you are: don't let her see you leave.<br><br><b>Run.</b>` },
   dale2: { title: 'Night log, left on the empty pedestal', body: `2:40 AM.<br><br>The Iris figure is gone from the window again. Just the stand left.<br><br>I think I get it now. She doesn't hate us. She's lonely. Every guard who stays past closing &mdash; she wants to keep. Make them part of the display.<br><br>I'm going to go find her. If I'm not at the desk in the morning, check the windows.<br><br>&mdash; D.` },
 };
 
@@ -725,7 +843,7 @@ const breakerLights = [];
 // ---------- Extra mall dressing: frozen on Halloween night, 1989 ----------
 for (const [x, y, r] of [[14, 17, 0.7], [29, 14, 0.9], [2, 18, 0.5], [2, 13, 0.5], [19, 18, 0.6]]) set(x, y, PROP, r);
 for (const [x, y] of [[41, 13], [41, 18]]) set(x, y, PROP);
-const neonMats = [], camRigs = [], puddles = [], phones = [];
+const neonMats = [...(upperNeon || [])], camRigs = [], puddles = [], phones = [];
 const pumpkinTex = canvasTex(256, 128, (g, w, h) => {
   g.fillStyle = '#d2661a'; g.fillRect(0, 0, w, h);
   for (let i = 0; i < 8; i++) { g.fillStyle = 'rgba(90,30,0,.35)'; g.fillRect(i * 32, 0, 3, h); }
@@ -767,7 +885,7 @@ function bannerTex(lines, bg, fg) {
   // sale banners hanging over the atrium
   const bt = bannerTex(['HALLOWEEN NIGHT SALE', 'TUESDAY OCT 31 · OPEN TIL MIDNIGHT'], '#1b0e05', '#ff8a1e');
   const bm = new THREE.MeshStandardMaterial({ map: bt, side: THREE.DoubleSide, roughness: 0.95, emissive: 0xffffff, emissiveMap: bt, emissiveIntensity: 0.04 });
-  for (const [x, z, r] of [[15 * C, 12 * C + 0.4, 0], [29 * C, 20 * C - 0.4, 0], [22 * C, 9.5 * C, 0.04]]) {
+  for (const [x, z, r] of [[15 * C, 12 * C + 0.3, 0], [29 * C, 20 * C - 0.3, 0], [22 * C, 9.5 * C, 0.04]]) {
     const b = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.25), bm); b.position.set(x, 3.15, z); b.rotation.set(0, r, rand(-0.04, 0.04)); scene.add(b);
     for (const a of [-2.4, 2.4]) cyl(0.004, 0.004, 0.25, M.metal, x + a, WH - 0.12, z);
     signs.push({ mat: bm, flick: false, base: 0.25 });
@@ -855,7 +973,7 @@ function bannerTex(lines, bg, fg) {
   }
   // ceiling security cameras that keep turning to watch you
   const led = new THREE.MeshStandardMaterial({ color: 0x200000, emissive: 0xff0000, emissiveIntensity: 2 });
-  for (const [x, z] of [[2.5 * C, 8.5 * C], [41.5 * C, 8.5 * C], [2.5 * C, 23.5 * C], [41.5 * C, 23.5 * C], [13.5 * C, 12.5 * C], [30.5 * C, 19.5 * C]]) {
+  for (const [x, z] of [[2.5 * C, 8.5 * C], [41.5 * C, 8.5 * C], [2.5 * C, 23.5 * C], [41.5 * C, 23.5 * C], [13.5 * C, 11.5 * C], [31.5 * C, 20.5 * C]]) {
     const rig = new THREE.Group(); rig.position.set(x, WH - 0.25, z); scene.add(rig);
     cyl(0.03, 0.03, 0.25, M.metal, 0, 0.12, 0, rig);
     const head = new THREE.Group(); rig.add(head);
@@ -866,10 +984,86 @@ function bannerTex(lines, bg, fg) {
   camRigs.led = led;
 }
 
+// ---------- HALVORSEN & CO. department store wing ----------
+const grille = new THREE.Group(); scene.add(grille);
+let daleFigure;
+{
+  const dx0 = 43, dx1 = 58, dy0 = 4, dy1 = 27;
+  const cm = new THREE.MeshStandardMaterial({ map: carpetTex, color: 0x5a1d24, roughness: 1 });
+  const carpet = new THREE.Mesh(new THREE.PlaneGeometry((dx1 - dx0 + 1) * C, (dy1 - dy0 + 1) * C), cm);
+  carpet.rotation.x = -Math.PI / 2; carpet.position.set((dx0 + dx1 + 1) / 2 * C, 0.004, (dy0 + dy1 + 1) / 2 * C); carpet.receiveShadow = true; scene.add(carpet);
+  // entrance header + sign on the hall side
+  box(0.4, 1.0, 4, M.header, cx(42), WH - 0.5, 16 * C);
+  const tex = signTex('HALVORSEN & CO.', '#f4e2b0');
+  const sm = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.05 });
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.66), sm); sg.position.set(42 * C - 0.21, WH - 0.5, 16 * C); sg.rotation.y = -Math.PI / 2; scene.add(sg);
+  signs.push({ mat: sm, flick: true, base: 1.1 });
+  // security grille (Night 1 only)
+  for (let k = 0; k <= 26; k++) { const b = cyl(0.018, 0.018, WH - 1, M.metal, 42 * C + 0.15, (WH - 1) / 2, 15 * C + k * 0.154, grille, 6); b.castShadow = true; }
+  for (const y of [0.4, 1.5, 2.6]) { const r = cyl(0.025, 0.025, 4, M.metal, 42 * C + 0.15, y, 16 * C, grille, 6); r.rotation.x = Math.PI / 2; }
+  const ct = bannerTex(['CLOSED FOR RENOVATION', 'HALVORSEN & CO. REOPENS SPRING 1990'], '#e8e0cc', '#2a2a2a');
+  const cp = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.45), new THREE.MeshStandardMaterial({ map: ct, side: THREE.DoubleSide }));
+  cp.position.set(42 * C + 0.1, 1.4, 16 * C); cp.rotation.y = -Math.PI / 2; grille.add(cp);
+  grille.visible = NIGHT !== 2;
+  // cosmetics counters by the entrance
+  for (const y of [12, 19]) { const o = placeAt(44, y, 1, 0); propCase(o); set(44, y, PROP); }
+  // a forest of display figures, racks and tables, leaving aisles at rows 15-16 and column 50
+  for (const y of [6, 8, 10, 12, 19, 21, 23, 25]) for (const x of [46, 48, 52, 54, 56]) {
+    if (get(x, y) !== FLOOR) continue;
+    const r = srand();
+    if (r < 0.42) { addDecoy(cx(x) + rand(-0.3, 0.3), cz(y) + rand(-0.3, 0.3), Math.atan2(-1, 0) + rand(-1.2, 1.2)); set(x, y, PROP, 0.45); }
+    else if (r < 0.75) { propRack(placeAt(x, y, 0, 1)); set(x, y, PROP); }
+    else if (r < 0.85) { propTable(placeAt(x, y, 0, 1)); set(x, y, PROP, 0.8); }
+  }
+  for (let y = dy0; y <= dy1; y += 2) { if (srand() < 0.7) { propShelf(placeAt(58, y, -1, 0)); set(58, y, PROP); } }
+  // Dale, at the far end, on a platform under a spotlight
+  cyl(0.8, 0.85, 0.3, M.velvet, cx(57), 0.15, cz(15) + 1);
+  daleFigure = makeMannequin({ stand: false });
+  const navy = new THREE.MeshStandardMaterial({ color: 0x1b2433, roughness: 0.8 });
+  part(geo('bod', () => new THREE.CylinderGeometry(0.16, 0.175, 0.42, 18)), navy, daleFigure.j.spine, 0, 0.22, 0, 1.12, 1.05, 0.78);
+  part(geo('cap', () => new THREE.CylinderGeometry(0.1, 0.11, 0.07, 16)), navy, daleFigure.j.head, 0, 0.21, 0.01);
+  part(geo('bill', () => new THREE.BoxGeometry(0.16, 0.012, 0.08)), navy, daleFigure.j.head, 0, 0.18, 0.11);
+  part(geo('badge', () => new THREE.BoxGeometry(0.04, 0.05, 0.01)), new THREE.MeshStandardMaterial({ color: 0xc9a23a, metalness: 1, roughness: 0.3 }), daleFigure.j.spine, 0.08, 0.32, 0.12);
+  daleFigure.group.position.set(cx(57), 0.3, cz(15) + 1); daleFigure.group.rotation.y = -Math.PI / 2; setPose(daleFigure, 'idle');
+  scene.add(daleFigure.group); set(57, 15, PROP, 0.9); set(57, 16, PROP, 0.9);
+  const ds = new THREE.SpotLight(0xfff0d0, 10, 10, 0.4, 0.7, 1.5); ds.position.set(cx(57), WH - 0.1, cz(15) + 1); ds.target.position.set(cx(57), 0, cz(15) + 1); scene.add(ds, ds.target);
+}
+// dead escalators up to the balcony
+escalator(34, 26.2, 25); escalator(54, 61.8, 39);
+
+// ---------- hiding spots: kiosks, fitting rooms, a supply closet ----------
+const hideSpots = [];
+function addHide(mesh, x, z, y, fx, fz, ex, ez, kind) {
+  hideSpots.push(addItem('hide', x, Math.max(y, 0.9), z, { mesh, spot: { x, z, y, yaw: Math.atan2(-fx, -fz) }, exit: [ex, ez], hideKind: kind }));
+}
+for (const [x, y, ey] of [[13, 9, 10], [30, 9, 10], [13, 22, 21], [30, 22, 21]]) addHide(null, cx(x), cz(y), 0.75, 0, ey > y ? 1 : -1, cx(x), cz(ey), 'kiosk');
+function booth(x, y, fx, fz, curtainMat) {
+  const o = placeAt(x, y, fx, fz);
+  box(1.6, 2.3, 0.06, M.laminate, 0, 1.15, -0.75, o);
+  for (const sx of [-0.78, 0.78]) box(0.06, 2.3, 1.5, M.laminate, sx, 1.15, 0, o);
+  box(1.6, 0.06, 1.5, M.laminate, 0, 2.3, 0, o);
+  for (const sx of [-0.45, 0.45]) { const c = box(0.62, 2.1, 0.03, curtainMat, sx, 1.1, 0.74, o); c.castShadow = true; }
+  return o;
+}
+for (const [kind, curtain] of [['boutique', M.velvet], ['boutique2', M.velvet], ['maint', M.dark]]) {
+  const s = S[kind]; const [x, y] = s.cell(4, s.V - 1); if (get(x, y) !== FLOOR) continue;
+  const [ex, ey] = s.cell(4, s.V - 2);
+  addHide(booth(x, y, s.fwd[0], s.fwd[1], curtain), cx(x), cz(y), 1.5, s.fwd[0], s.fwd[1], cx(ex), cz(ey), 'booth'); set(x, y, PROP);
+}
+for (const [x, y, fx, ex] of [[44, 6, 1, 45], [57, 25, -1, 56]]) {
+  if (get(x, y) !== FLOOR) continue;
+  addHide(booth(x, y, fx, 0, M.velvet), cx(x), cz(y), 1.5, fx, 0, cx(ex), cz(y), 'booth'); set(x, y, PROP);
+}
+// the girl in the red dress, for staged appearances (the balcony, the pedestal)
+const ghost = makeMannequin({ isIris: true, dress: 0x5c0b12, stand: false });
+ghost.group.visible = false; scene.add(ghost.group);
+{ const [x, y] = S.window.item; addItem('pedestal', cx(x), 0.9, cz(y) - 0.25); }
+
 // ceiling light panels (instanced)
 {
   const spots = [];
   for (let y = 8; y <= 23; y++) for (let x = 2; x <= 41; x++) if (get(x, y) !== WALL && x % 3 === 0 && y % 3 === 1 && !(x >= 13 && x <= 30 && y >= 12 && y <= 19)) spots.push([x, y]);
+  for (let y = 5; y <= 26; y += 3) for (let x = 44; x <= 57; x += 3) spots.push([x, y]);
   for (const s of stores) for (const [u, v] of [[2, 2], [2, 4]]) { const c = s.cell(u, v); spots.push(c); }
   const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(1.2, 0.6), M.panel, spots.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
@@ -878,8 +1072,9 @@ function bannerTex(lines, bg, fg) {
 }
 // hall lights (power) + emergency lights (always)
 const hallLights = [];
-for (const [x, z] of [[8, 9.5], [21, 9.5], [34, 9.5], [8, 21.5], [21, 21.5], [34, 21.5], [3.5, 15.5], [21.5, 15.5]]) {
-  const l = new THREE.PointLight(0xdfe8ff, 0, 15, 1.8); l.position.set(x * C, WH - 0.4, z * C); scene.add(l);
+for (const [x, z] of [[8, 9.5], [21, 9.5], [34, 9.5], [8, 21.5], [21, 21.5], [34, 21.5], [3.5, 15.5], [21.5, 15.5], [47, 10], [52, 20]]) {
+  const inAtrium = x > 13 && x < 31 && z > 12 && z < 20;
+  const l = new THREE.PointLight(0xdfe8ff, 0, inAtrium ? 22 : 15, 1.8); l.position.set(x * C, inAtrium ? 8 : WH - 0.4, z * C); scene.add(l);
   hallLights.push({ l, base: 22, flick: Math.random() < 0.4 });
 }
 const emergency = [];
@@ -889,7 +1084,7 @@ for (const [x, y, z] of [[cx(2) + 0.1, 3.2, 16 * C], [cx(4), 3.3, cz(26)], [cx(4
   emergency.push(l);
 }
 const moon = new THREE.SpotLight(0x6f86b8, 40, 22, 1.0, 0.9, 1.4);
-moon.position.set(22 * C, WH - 0.05, 16 * C); moon.target.position.set(22 * C, 0, 16 * C); scene.add(moon, moon.target);
+moon.position.set(22 * C, 8.3, 16 * C); moon.target.position.set(22 * C, 0, 16 * C); scene.add(moon, moon.target);
 
 // main gate: shutter + exit sign + the outside
 const gate = new THREE.Group(); scene.add(gate);
@@ -911,7 +1106,7 @@ let AC = null, master, sfx, conv, noiseBuf, tensionGain, humGain;
 function initAudio() {
   if (AC) return;
   AC = new (window.AudioContext || window.webkitAudioContext)();
-  master = AC.createGain(); master.gain.value = 0.9; master.connect(AC.destination);
+  master = AC.createGain(); master.gain.value = SETTINGS.vol; master.connect(AC.destination);
   conv = AC.createConvolver();
   const len = AC.sampleRate * 3.2, ir = AC.createBuffer(2, len, AC.sampleRate);
   for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
@@ -993,7 +1188,7 @@ const SND = {
     if (!AC) return; const t = AC.currentTime, end = t + 1.45;
     master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(0, t);
     const comp = AC.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 0; comp.ratio.value = 14; comp.attack.value = 0.001; comp.release.value = 0.15;
-    const out = AC.createGain(); out.gain.setValueAtTime(1.7, t); out.gain.setValueAtTime(1.7, end - 0.03); out.gain.linearRampToValueAtTime(0, end);
+    const out = AC.createGain(), loud = 1.7 * SETTINGS.vol; out.gain.setValueAtTime(loud, t); out.gain.setValueAtTime(loud, end - 0.03); out.gain.linearRampToValueAtTime(0, end);
     comp.connect(out).connect(AC.destination);
     const stop = end + 0.05;
     const ws = AC.createWaveShaper(); const curve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 14); } ws.curve = curve;
@@ -1019,7 +1214,7 @@ const SND = {
     gr.connect(am).connect(glp).connect(comp); gr.start(t); am2.start(t); gr.stop(stop); am2.stop(stop);
     // the hit
     tone('sine', 140, t, 0.001, 1.6, 0.6, comp, 28);
-    if (customScare) { const s = AC.createBufferSource(); s.buffer = customScare; const g = AC.createGain(); g.gain.value = 1.2; s.connect(g).connect(AC.destination); s.start(t); }
+    if (customScare) { const s = AC.createBufferSource(); s.buffer = customScare; const g = AC.createGain(); g.gain.value = 1.2 * SETTINGS.vol; s.connect(g).connect(AC.destination); s.start(t); }
   },
   powerDown() {
     if (!AC) return; const t = AC.currentTime;
@@ -1032,9 +1227,13 @@ const SND = {
   staticBlast() {
     if (!AC) return; const t = AC.currentTime;
     const n = noiseSrc(); const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.4;
-    const g = AC.createGain(); g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    const g = AC.createGain(); g.gain.setValueAtTime(0.0001 + 0.55 * SETTINGS.vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
     n.connect(f).connect(g).connect(AC.destination); n.start(t); n.stop(t + 0.75);
   },
+  ratchet() { if (!AC) return; const t = AC.currentTime; nburst(t, 0.025, 0.22, 'bandpass', 2600 + Math.random() * 500, 6, sfx, 0.001); tone('square', 900, t, 0.001, 0.025, 0.02, sfx); },
+  gasp() { if (!AC) return; const t = AC.currentTime; nburst(t, 0.8, 0.5, 'bandpass', 1400, 1.2, sfx, 0.12); nburst(t + 0.85, 0.6, 0.25, 'bandpass', 900, 1, sfx, 0.05); },
+  breath(v) { if (!AC) return; const t = AC.currentTime; nburst(t, 0.6, v, 'bandpass', 1100, 0.8, master, 0.25); nburst(t + 0.8, 0.7, v * 0.8, 'bandpass', 800, 0.8, master, 0.2); },
+  cloth() { if (!AC) return; nburst(AC.currentTime, 0.35, 0.12, 'highpass', 1800, 0.6, sfx, 0.05); },
   thunk(pan, v = 0.5) { if (!AC) return; const t = AC.currentTime, d = panned(pan); tone('sine', 95, t, 0.002, v, 0.3, d, 45); nburst(t, 0.06, v * 0.6, 'bandpass', 1800, 3, d); tone('sawtooth', 120, t + 0.05, 0.08, v * 0.04, 0.9, d); },
   pop() { if (!AC) return; const t = AC.currentTime; nburst(t, 0.25, 0.6, 'highpass', 2500, 0.6, sfx, 0.001); for (let i = 0; i < 9; i++) tone('sine', 2500 + Math.random() * 4000, t + 0.04 + Math.random() * 0.4, 0.001, 0.05, 0.15, sfx); },
   chip() {
@@ -1112,11 +1311,36 @@ function grainTick() { const d = grainImg.data; for (let i = 0; i < d.length; i 
 // =====================================================================
 const SPAWN = { x: cx(3) + 0.5, z: 16 * C, yaw: 0 };
 const RESPAWN = { x: cx(4), z: cz(4), yaw: 0 };
-const player = { pos: new V3(SPAWN.x, 1.62, SPAWN.z), yaw: SPAWN.yaw, pitch: 0, stamina: 1, exhausted: false, battery: 1, flashOn: false, fuses: 0, stepAcc: 0, bob: 0, sprinting: false };
+const player = { pos: new V3(SPAWN.x, 1.62, SPAWN.z), yaw: SPAWN.yaw, pitch: 0, stamina: 1, exhausted: false, battery: 1, flashOn: false, fuses: 0, stepAcc: 0, bob: 0, sprinting: false, hidden: null, breath: 1, holding: false, cranking: false };
 const keys = {};
 let state = 'title', paused = false;
 let flickerT = 0, shake = 0;
-const game = { prePower: true, cutT: -1, power: false, gateOpen: false, blackout: 0, blackoutT: 8, readDale: false, leftOffice: false, fusesInstalled: false, paT: 70, musicT: 35, decoyT: 18, hbT: 0, sprintNoise: 0 };
+const game = { prePower: true, cutT: -1, chase: false, restful: false, daleFound: false, gateRaising: false, lowHint: false, power: false, gateOpen: false, blackout: 0, blackoutT: 8, readDale: false, leftOffice: false, fusesInstalled: false, paT: 70, musicT: 35, decoyT: 18, hbT: 0, sprintNoise: 0 };
+
+// Gamepad (standard mapping). Polled once per frame.
+const pad = { active: false, lx: 0, ly: 0, rx: 0, ry: 0, held: {}, prev: {} };
+function pollPad(dt) {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null; for (const g of list) if (g && g.connected) { gp = g; break; }
+  if (!gp) { pad.active = false; pad.held = {}; return; }
+  pad.active = true;
+  const dz = v => Math.abs(v) < 0.18 ? 0 : v;
+  pad.lx = dz(gp.axes[0] || 0); pad.ly = dz(gp.axes[1] || 0); pad.rx = dz(gp.axes[2] || 0); pad.ry = dz(gp.axes[3] || 0);
+  const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
+  const now = { a: b(0), b: b(1), x: b(2), y: b(3), lt: b(6), rt: b(7), start: b(9) };
+  const edge = k => now[k] && !pad.prev[k];
+  pad.held = now;
+  if (state === 'play' && !paused) {
+    player.yaw -= pad.rx * 2.6 * dt * SETTINGS.sens;
+    player.pitch = clamp(player.pitch - pad.ry * 2.0 * dt * SETTINGS.sens * (SETTINGS.invert ? -1 : 1), -1.35, 1.35);
+    if (edge('a')) { if (reading) closeNote(); else interact(); }
+    if (edge('x') && !reading) toggleFlash();
+  }
+  if (edge('start')) { if (state === 'play' && !paused) pauseGame(); else if (paused) resumeGame(); }
+  else if (edge('a') && paused) resumeGame();
+  if (edge('a') && state === 'dead' && $('dead').style.display === 'flex') respawn();
+  pad.prev = now;
+}
 
 function circleBlocked(x, z, r) {
   const x0 = toCell(x - r), x1 = toCell(x + r), z0 = toCell(z - r), z1 = toCell(z + r);
@@ -1137,22 +1361,31 @@ function circleBlocked(x, z, r) {
   }
   return false;
 }
-const flashActive = () => player.flashOn && player.battery > 0 && flickerT <= 0;
+const flashActive = () => player.flashOn && player.battery > 0 && flickerT <= 0 && !player.cranking && !player.hidden;
 const powerLit = () => (game.power || game.prePower) && game.blackout <= 0;
 
 function updatePlayer(dt) {
+  if (player.hidden) { updateHidden(dt); return; }
   let f = 0, s = 0;
   if (keys.KeyW || keys.ArrowUp) f += 1; if (keys.KeyS || keys.ArrowDown) f -= 1;
   if (keys.KeyD || keys.ArrowRight) s += 1; if (keys.KeyA || keys.ArrowLeft) s -= 1;
-  const moving = f !== 0 || s !== 0;
-  const wantSprint = (keys.ShiftLeft || keys.ShiftRight) && moving && f > 0;
+  if (pad.active) { f -= pad.ly; s += pad.lx; }
+  f = clamp(f, -1, 1); s = clamp(s, -1, 1);
+  // winding the flashlight: you have to stand still, and it's loud
+  player.cranking = !reading && !!(keys.KeyC || pad.held.y);
+  if (player.cranking) {
+    f = 0; s = 0; player.battery = Math.min(1, player.battery + 0.075 * dt); game.sprintNoise = 1;
+    player.crankT = (player.crankT || 0) - dt; if (player.crankT <= 0) { player.crankT = 0.09; SND.ratchet(); }
+  }
+  const moving = Math.abs(f) > 0.05 || Math.abs(s) > 0.05;
+  const wantSprint = (keys.ShiftLeft || keys.ShiftRight || pad.held.rt) && moving && f > 0;
   if (player.stamina <= 0.02) player.exhausted = true;
   if (player.exhausted && player.stamina > 0.35) player.exhausted = false;
   player.sprinting = wantSprint && !player.exhausted;
   player.stamina = clamp(player.stamina + (player.sprinting ? -0.22 : 0.13) * dt, 0, 1);
   const speed = player.sprinting ? 4.9 : (f < 0 ? 2.0 : 2.7);
   if (moving) {
-    const len = Math.hypot(f, s); f /= len; s /= len;
+    const len = Math.max(1, Math.hypot(f, s)); f /= len; s /= len;
     const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
     const dx = (-sin * f + cos * s) * speed * dt, dz = (-cos * f - sin * s) * speed * dt;
     const r = 0.28; const p = player.pos;
@@ -1166,23 +1399,63 @@ function updatePlayer(dt) {
   }
   if (player.sprinting) game.sprintNoise = 1;
   game.sprintNoise = Math.max(0, game.sprintNoise - dt * 0.5);
-  // battery
-  if (player.flashOn) player.battery = Math.max(0, player.battery - dt / 360);
+  // battery: drains steadily; when it's low you'll have to wind it
+  if (player.flashOn && !player.cranking) player.battery = Math.max(0, player.battery - dt / 220 * DIFF.drain);
+  if (player.battery < 0.2 && !game.lowHint && !game.prePower) { game.lowHint = true; toast('Battery low. Hold [C] to wind it. It is loud.', 4); }
+  if (player.battery > 0.45) game.lowHint = false;
   const bob = moving ? Math.sin(player.bob) * (player.sprinting ? 0.05 : 0.03) : 0;
   camera.position.set(player.pos.x, 1.62 + bob, player.pos.z);
   if (shake > 0) { camera.position.x += rand(-1, 1) * shake * 0.05; camera.position.y += rand(-1, 1) * shake * 0.05; shake = Math.max(0, shake - dt * 2); }
-  camera.rotation.set(player.pitch, player.yaw, moving ? Math.sin(player.bob * 0.5) * 0.006 : 0);
+  camera.rotation.set(player.pitch, player.yaw, moving ? Math.sin(player.bob * 0.5) * 0.006 : (player.cranking ? Math.sin(performance.now() / 45) * 0.01 : 0));
   // flashlight intensity: battery dips, flickers
   let fi = 0;
-  if (player.flashOn && player.battery > 0) {
+  if (player.flashOn && player.battery > 0 && !player.cranking) {
     fi = 90 * (0.35 + 0.65 * Math.min(1, player.battery / 0.3));
     if (player.battery < 0.2 && Math.random() < 0.04) fi *= Math.random() * 0.3;
   }
   if (flickerT > 0) { flickerT -= dt; fi = (flickerT > 0.55 && Math.random() < 0.5) ? fi * 0.4 : 0; }
   flash.intensity = fi; bounce.intensity = fi > 0 ? 0.9 * fi / 90 : 0;
   // exit
-  if (game.gateOpen && player.pos.x < 2 * C - 0.3) endGame();
+  if (game.gateOpen && player.pos.x < 2 * C - 0.3) endGame(NIGHT === 2 ? 'night2' : game.restful ? 'rest' : 'dale');
   if (!game.leftOffice && game.readDale && toCell(player.pos.z) >= 8) { game.leftOffice = true; firstSighting(); }
+}
+
+// ---------- hiding ----------
+function enterHide(it) {
+  player.hidden = it; player.yaw = it.spot.yaw; player.pitch = 0; player.breath = 1; player.flashOn = false;
+  $('hideVig').style.opacity = 1; $('breathWrap').style.display = 'block'; $('prompt').style.opacity = 0; SND.cloth();
+}
+function leaveHide(silent) {
+  const it = player.hidden; if (!it) return;
+  player.hidden = null; player.holding = false; player.pos.set(it.exit[0], 1.62, it.exit[1]);
+  $('hideVig').style.opacity = 0; $('breathWrap').style.display = 'none'; if (!silent) SND.cloth();
+}
+function updateHidden(dt) {
+  const h = player.hidden.spot;
+  player.holding = !!(keys.Space || keys.Mouse2 || pad.held.lt || pad.held.b) && player.breath > 0;
+  if (player.holding) player.breath = Math.max(0, player.breath - dt / 7);
+  else player.breath = Math.min(1, player.breath + dt / 4);
+  if (player.breath <= 0 && !player.gasped) { // you couldn't hold it: a loud, ragged gasp
+    player.gasped = true; SND.gasp(); game.sprintNoise = 1;
+    if (iris.active) { iris.mode = 'hunt'; iris.modeT = 10; iris.hearT = 2; }
+  }
+  if (player.breath > 0.3) player.gasped = false;
+  player.breathT = (player.breathT || 0) - dt;
+  if (!player.holding && player.breathT <= 0) { player.breathT = 1.7; SND.breath(0.04 + tension * 0.12); }
+  let dy = player.yaw - h.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); player.yaw = h.yaw + clamp(dy, -0.9, 0.9);
+  player.pitch = clamp(player.pitch, -0.5, 0.4);
+  camera.position.set(h.x, h.y + (player.holding ? 0 : Math.sin(performance.now() / 600) * 0.006), h.z);
+  camera.rotation.set(player.pitch, player.yaw, 0);
+  flash.intensity = 0; bounce.intensity = 0;
+  player.pos.set(h.x, 1.62, h.z);
+}
+// she reaches your hiding place and stands there, listening
+function searchHidden(dt) {
+  iris.searchT = (iris.searchT || 0) + dt; faceIris();
+  if (player.holding) iris.hearT = Math.max(0, (iris.hearT || 0) - dt * 0.8);
+  else iris.hearT = (iris.hearT || 0) + dt;
+  if (iris.hearT > 1.1) { iris.searchT = iris.hearT = 0; leaveHide(true); die(); return; }
+  if (iris.searchT > 7) { iris.searchT = iris.hearT = 0; teleportHidden(18, 35, false); iris.mode = 'lurk'; iris.modeT = 12; }
 }
 
 // =====================================================================
@@ -1345,7 +1618,7 @@ function firstSighting() {
 }
 function appear() {
   const a = aggr();
-  iris.appearT = Math.max(12, 44 - a * 7) + rand(0, 10);
+  iris.appearT = (game.chase ? rand(6, 10) : Math.max(12, 44 - a * 7) + rand(0, 10)) * DIFF.appear;
   if (flashActive() && Math.random() < 0.4 && ambush()) return;
   if (teleportHidden(7, 15, true)) { iris.mode = 'hunt'; iris.modeT = 10 + a * 4; }
 }
@@ -1398,7 +1671,8 @@ function updateIris(dt) {
   }
   const dx = player.pos.x - p.x, dz = player.pos.z - p.z, d = Math.hypot(dx, dz);
   iris.stingCD -= dt; iris.graceT -= dt;
-  const seen = isSeenAt(p);
+  // Night 2: while the lights are on, nothing moves
+  const seen = (NIGHT === 2 && powerLit()) || isSeenAt(p);
   if (seen) {
     if (iris.travel > 1.2 && iris.stingCD <= 0 && d < 15) { SND.stinger(d < 6 ? 1 : d < 10 ? 0.6 : 0.3); iris.stingCD = 5; shake = d < 6 ? 0.6 : 0.2; }
     iris.travel = 0; iris.poseChanged = false; iris.animSpeed = 0;
@@ -1414,17 +1688,18 @@ function updateIris(dt) {
     faceIris();
     if (!iris.poseChanged) { setPose(iris.m, pick(Object.keys(POSES))); iris.poseChanged = true; }
     iris.animSpeed = 0;
-    if (iris.mode === 'hunt') {
-      const speed = 2.3 + aggr() * 0.5 + (game.blackout > 0 ? 1.2 : 0);
+    if (player.hidden && iris.mode === 'hunt' && d < 2.6) searchHidden(dt);
+    else if (iris.mode === 'hunt') {
+      const speed = (2.3 + aggr() * 0.5 + (game.blackout > 0 ? 1.2 : 0) + (game.chase ? 0.6 : 0)) * DIFF.speed;
       const st = irisStep(dt, speed);
       iris.animSpeed = st > 0 ? speed / 3.2 : 0;
       iris.travel += st; iris.stepAcc += st;
       if (iris.stepAcc > 0.7 && d < 18) { iris.stepAcc = 0; SND.clack(irisPan(), clamp(0.3 - d / 70, 0.03, 0.3)); if (Math.random() < 0.15) SND.creak(irisPan(), clamp(0.12 - d / 200, 0.02, 0.12)); }
     }
-    if (iris.mode === 'hunt' && d < 3.2 && iris.graceT <= 0 && los(p.x, p.z, player.pos.x, player.pos.z)) {
+    if (!player.hidden && iris.mode === 'hunt' && d < DIFF.lunge && iris.graceT <= 0 && los(p.x, p.z, player.pos.x, player.pos.z)) {
       iris.lunge = { t: 0, fx: p.x, fz: p.z }; SND.stinger(0.8); SND.clack(irisPan(), 0.35); return;
     }
-    if (d < 0.95 && iris.graceT <= 0) { die(); return; }
+    if (!player.hidden && d < 0.95 && iris.graceT <= 0) { die(); return; }
   }
   iris.seen = seen;
   if (game.sprintNoise > 0.5 && d < 22 && iris.mode === 'lurk') { iris.mode = 'hunt'; iris.modeT = 8 + aggr() * 3; }
@@ -1554,7 +1829,7 @@ function updateOpening(dt) {
 // =====================================================================
 // SCRIPTED SCARES — one-shot scenes that can't hurt you
 // =====================================================================
-const EV = { done: {}, t: 0, active: null, arcadeT: 0, wait: 0 };
+const EV = { done: {}, t: 0, active: null, arcadeT: 0, wait: 0, balconyN: 0 };
 let lastNote = null;
 // a tall, pitch-black figure used for staged sightings
 const shade = makeMannequin({ stand: false, mat: new THREE.MeshStandardMaterial({ color: 0x0c0b0b, roughness: 0.85 }) });
@@ -1600,6 +1875,9 @@ function onNoteClosed(key) {
     }
     SND.creak(0, 0.25); setTimeout(() => SND.creak(-0.6, 0.2), 140); setTimeout(() => SND.creak(0.6, 0.22), 300);
   }
+  if (key === 'dale1') saveGame();
+  if (key === 'rule2') saveGame();
+  if (key === 'dale3') night2Escape();
   if (key === 'dale2' && !EV.done.hands) {
     // something knocks on the window behind you, and leaves hands on the glass
     EV.done.hands = true; hands.forEach(h => h.visible = true);
@@ -1642,6 +1920,20 @@ function updateEvents(dt) {
     if (s) { EV.done.blackFig = true; EV.blackFig = true; shade.group.position.set(s[0], 0, s[1]); shade.group.rotation.y = Math.atan2(player.pos.x - s[0], player.pos.z - s[1]); setPose(shade, 'face'); shade.group.visible = true; SND.stinger(0.5); }
   }
   if (EV.blackFig && game.blackout <= 0) { EV.blackFig = false; shade.group.visible = false; }
+  // 4) the girl in the red dress, up on the balcony, looking down at you (once per fuse)
+  if (NIGHT === 1 && !EV.active && !game.restful && player.fuses > EV.balconyN && px >= 13 && px <= 30 && py >= 12 && py <= 19) {
+    EV.balconyN = player.fuses; EV.active = 'balcony'; EV.t = 0; EV.seenG = false;
+    const north = player.pos.z > 32, gz = north ? 22.8 : 41.2, gx = clamp(player.pos.x + rand(-6, 6), 28, 60);
+    ghost.group.position.set(gx, 4.35, gz); ghost.group.rotation.y = Math.atan2(player.pos.x - gx, player.pos.z - gz);
+    setPose(ghost, pick(['idle', 'tilt', 'point'])); ghost.group.visible = true;
+  }
+  if (EV.active === 'balcony') {
+    EV.t += dt;
+    _pp.copy(ghost.group.position); _pp.y += 1.5; _pp.project(camera);
+    const inView = _pp.z < 1 && Math.abs(_pp.x) < 0.9 && Math.abs(_pp.y) < 0.9;
+    if (inView && !EV.seenG) { EV.seenG = true; SND.stinger(0.45); }
+    if ((EV.seenG && !inView) || EV.t > 30) { ghost.group.visible = false; EV.active = null; if (EV.seenG) SND.creak(0, 0.08); }
+  }
   if (EV.arcadeT > 0) EV.arcadeT -= dt;
 }
 
@@ -1694,17 +1986,24 @@ function updateDecoys(dt) {
   m.group.rotation.y = Math.atan2(player.pos.x - p.x, player.pos.z - p.z);
   setPose(m, pick(['tilt', 'point', 'idle', 'peek']));
   SND.creak(0, 0.03);
+  if (DIFF.decoysWalk) { // on Nightmare, some of them are a little closer every time
+    const dx = player.pos.x - p.x, dz = player.pos.z - p.z, d = Math.hypot(dx, dz);
+    if (d > 2.5) { const nx = p.x + dx / d * 0.7, nz = p.z + dz / d * 0.7; if (get(toCell(nx), toCell(nz)) !== WALL) p.set(nx, p.y, nz); }
+  }
 }
 
 // =====================================================================
 // INTERACTION & STORY
 // =====================================================================
 let focus = null, reading = false;
+let notesRead = new Set();
+const NOTE_SET = ['dale1', 'lumen', 'poster', 'janitor', 'father', 'dale2'];
 function updateInteract() {
   focus = null; let bestD = 1e9;
   camera.getWorldDirection(_fw);
   for (const it of items) {
     if (it.taken || (it.kind === 'phone' && !(it.ring > 0))) continue;
+    if (it.kind === 'pedestal' && !(NIGHT === 1 && game.power && !game.restful && NOTE_SET.every(k => notesRead.has(k)))) continue;
     const reach = it.kind === 'gate' ? 3.4 : 2.4;
     _d.subVectors(it.pos, camera.position); const d = _d.length();
     if (d > reach) continue;
@@ -1712,19 +2011,23 @@ function updateInteract() {
     if (_d.dot(_fw) < (it.kind === 'gate' ? 0.5 : 0.78)) continue;
     if (d < bestD) { bestD = d; focus = it; }
   }
-  const label = !focus ? '' : focus.kind === 'phone' ? '[E] Answer the phone' : focus.kind === 'note' ? '[E] Read' : focus.kind === 'fuse' ? '[E] Take fuse' : focus.kind === 'battery' ? '[E] Take batteries'
-    : focus.kind === 'breaker' ? (game.power ? 'Breaker: ON' : '[E] Breaker panel') : (game.gateOpen || game.prePower ? '' : '[E] Main gate');
+  if (player.hidden) { focus = null; $('prompt').style.opacity = 0; return; }
+  const label = !focus ? '' : focus.kind === 'hide' ? '[E] Hide' : focus.kind === 'pedestal' ? '[E] Leave her letters on the pedestal' : focus.kind === 'phone' ? '[E] Answer the phone' : focus.kind === 'note' ? '[E] Read' : focus.kind === 'fuse' ? '[E] Take fuse' : focus.kind === 'battery' ? '[E] Take batteries'
+    : focus.kind === 'breaker' ? (game.power ? 'Breaker: ON' : '[E] Breaker panel') : (game.gateOpen || game.gateRaising || game.prePower ? '' : '[E] Main gate');
   $('prompt').textContent = label; $('prompt').style.opacity = label ? 1 : 0;
 }
 function interact() {
+  if (player.hidden) { leaveHide(); return; }
   if (!focus) return;
   const it = focus;
+  if (it.kind === 'hide') { enterHide(it); return; }
+  if (it.kind === 'pedestal') { layToRest(); return; }
   if (it.kind === 'note') { openNote(it.note); return; }
   if (it.kind === 'phone') { answerPhone(it); return; }
   if (it.kind === 'fuse') {
     it.taken = true; scene.remove(it.mesh); player.fuses++; SND.pickup(); $('fuseCount').textContent = player.fuses;
     if (it.store === 'arcade') { EV.arcadeT = 2.6; SND.chip(); shake = 0.3; } // every dead cabinet screams to life at once
-    toast(`Fuse ${player.fuses} / 3`);
+    toast(`Fuse ${player.fuses} / 3`); saveGame();
     if (player.fuses < 3) setObj(`Find fuses for the MAINTENANCE breaker (${player.fuses}/3)`);
     else setObj('Install the fuses in the MAINTENANCE breaker, south hall');
     if (player.fuses === 1) pa('Iris Halvorsen, please return to the atrium window. Your father is waiting.');
@@ -1732,7 +2035,7 @@ function interact() {
     if (player.fuses === 3) pa('Security to maintenance. Security to maintenance. She is right behind you.', () => { if (state === 'play' && !iris.seen) { teleportHidden(4.5, 7, true); iris.mode = 'hunt'; iris.modeT = 12; SND.creak(-irisPan(), 0.15); } });
     return;
   }
-  if (it.kind === 'battery') { it.taken = true; scene.remove(it.mesh); player.battery = Math.min(1, player.battery + 0.55); SND.pickup(); toast('Batteries'); return; }
+  if (it.kind === 'battery') { it.taken = true; scene.remove(it.mesh); player.battery = Math.min(1, player.battery + 0.35); SND.pickup(); toast('Batteries'); return; }
   if (it.kind === 'breaker') {
     if (game.power) return;
     if (player.fuses < 3) { toast(`The breaker is missing fuses (${player.fuses}/3)`); return; }
@@ -1740,13 +2043,14 @@ function interact() {
   }
   if (it.kind === 'gate') {
     if (game.prePower) { toast('Your shift just started. Clock in at SECURITY first.'); return; }
+    if (NIGHT === 2 && !game.daleFound) { toast('Not without Dale.'); return; }
     if (!game.power) { toast('Locked. No power to the shutter motor.'); if (game.readDale) setObj(player.fuses < 3 ? `Find fuses for the MAINTENANCE breaker (${player.fuses}/3)` : 'Install the fuses in the MAINTENANCE breaker'); return; }
     if (!game.gateOpen) openGate();
   }
 }
 function openNote(key) {
   const n = NOTES[key]; reading = true; SND.paper();
-  $('noteTitle').innerHTML = n.title; $('noteBody').innerHTML = n.body; $('noteWrap').style.display = 'flex'; lastNote = key;
+  $('noteTitle').innerHTML = n.title; $('noteBody').innerHTML = n.body; $('noteWrap').style.display = 'flex'; lastNote = key; notesRead.add(key);
   if (key === 'dale1' && !game.readDale) {
     game.readDale = true;
     setObj('Find 3 fuses hidden in the shops (0/3) and restore power in MAINTENANCE');
@@ -1754,30 +2058,76 @@ function openNote(key) {
 }
 function closeNote() { reading = false; $('noteWrap').style.display = 'none'; SND.paper(); onNoteClosed(lastNote); }
 function powerUp() {
-  game.fusesInstalled = true; game.power = true; SND.power(); shake = 0.5;
+  game.fusesInstalled = true; game.power = true; game.chase = true; SND.power(); shake = 0.5;
   breakerLights.forEach(m => m.emissive.setHex(0x30ff40));
-  setObj('Get to the MAIN GATE &mdash; west entrance');
+  const allNotes = NOTE_SET.every(k => notesRead.has(k));
+  setObj(allNotes ? 'Get to the MAIN GATE &mdash; or bring her letters to the ATRIUM WINDOW' : 'Get to the MAIN GATE &mdash; west entrance');
   toast('POWER RESTORED', 3);
   game.blackoutT = 5;
   pa('Thank you for shopping at the Halvorsen Galleria. The doors are now open. Please... stay.');
   iris.mode = 'hunt'; iris.modeT = 999; iris.appearT = 6;
+  saveGame();
 }
+// The finale: the shutter takes its time, and she knows you're leaving.
 function openGate() {
-  game.gateOpen = true; SND.shutter(); toast('The shutter is opening...');
-  for (let y = 14; y <= 17; y++) set(1, y, FLOOR);
-  flowCell = -1;
-  const t0 = performance.now();
-  const anim = () => { const k = Math.min(1, (performance.now() - t0) / 3200); gate.position.y = k * (WH - 0.4); if (k < 1) requestAnimationFrame(anim); };
+  if (game.gateRaising || game.gateOpen) return;
+  game.gateRaising = true; SND.shutter();
+  if (!game.restful) { setTimeout(() => SND.shutter(), 3200); setTimeout(() => SND.shutter(), 6400); toast('The shutter motor grinds... hold her off!', 3); setObj('Hold her off until the shutter is up'); }
+  const t0 = performance.now(), dur = game.restful ? 3200 : 9000;
+  const anim = () => {
+    const k = Math.min(1, (performance.now() - t0) / dur); gate.position.y = k * (WH - 0.4);
+    if (k < 1) { requestAnimationFrame(anim); return; }
+    game.gateOpen = true; game.gateRaising = false;
+    for (let y = 14; y <= 17; y++) set(1, y, FLOOR);
+    flowCell = -1; setObj(game.restful ? 'Go home.' : 'GO. NOW.');
+  };
   anim();
-  // she wants you to stay: one last appearance
-  iris.appearT = 1.5;
+  if (!game.restful) { iris.mode = 'hunt'; iris.modeT = 999; iris.appearT = 2; }
+}
+// Secret ending: bring all six pieces of her story back to where she belongs.
+function showRestingIris() {
+  const [x, y] = S.window.item;
+  ghost.group.position.set(cx(x), 0.3, cz(y)); ghost.group.rotation.y = Math.PI / 2; setPose(ghost, 'idle'); ghost.group.visible = true;
+}
+function layToRest() {
+  game.restful = true; game.chase = false; game.blackout = 0; tension = 0;
+  iris.active = false; iris.m.group.visible = false;
+  EV.active = null; showRestingIris();
+  SND.musicBox(); setTimeout(() => whisper('thank you. closing time.'), 1400);
+  setObj('Go home. The main gate is open.'); toast('She is home.', 3);
+  if (!game.gateOpen && !game.gateRaising) openGate();
+  saveGame();
+}
+// Night 2: the letter-perfect replica of the mall, except the lights are on and the grille is open.
+function setupNight2() {
+  for (const it of items) if (it.kind === 'note' || it.kind === 'fuse' || it.kind === 'breaker' || it.kind === 'pedestal') { it.taken = true; if (it.kind === 'note' || it.kind === 'fuse') scene.remove(it.mesh); }
+  addItem('note', cx(3) + 0.4, 0.02, 16 * C - 2.6, { note: 'rule2' });
+  addItem('note', cx(56) + 0.3, 0.02, cz(15) + 1.7, { note: 'dale3' });
+  Object.assign(game, { prePower: false, cutT: 99, power: true, readDale: true, leftOffice: true, blackoutT: 12 });
+  gate.position.y = WH - 0.4;
+  player.flashOn = true;
+  iris.active = true; iris.scripted = 3; iris.mode = 'lurk'; iris.modeT = 20; iris.appearT = 30;
+  iris.m.group.position.set(cx(50), 0, cz(8)); iris.m.group.visible = true;
+  $('fuseCount').parentElement.style.display = 'none';
+  $('title').querySelector('h2').innerHTML = 'Night 2 &mdash; the morning after';
+  $('intro').innerHTML = `<p>November 1st. 11:40 PM.</p><p>The demolition was postponed. Something about the wiring: the meter has been running all day, and nobody turned it on.</p><p>Dale's wife has called the security company four times.</p><p>You still have his keys.</p>`;
+}
+function night2Escape() {
+  if (game.daleFound) return;
+  game.daleFound = true; game.power = false; game.blackout = 0; game.chase = true; SND.powerDown();
+  game.gateOpen = true; for (let y = 14; y <= 17; y++) set(1, y, FLOOR); flowCell = -1;
+  setObj('RUN. Main gate, west entrance.');
+  pa('Attention. The guard on duty is leaving. Please... do not let them leave.');
+  setTimeout(() => { if (state === 'play') { teleportHidden(7, 12, true); iris.mode = 'hunt'; iris.modeT = 999; iris.appearT = 6; } }, 2500);
+  saveGame();
 }
 
 function updateWorld(dt, t) {
   // power-on blackouts
-  if (game.power) {
-    if (game.blackout > 0) { game.blackout -= dt; if (game.blackout <= 0) { game.blackoutT = rand(6, 13); SND.buzz(0.25); } }
-    else { game.blackoutT -= dt; if (game.blackoutT <= 0) { game.blackout = rand(1.1, 2.0); SND.buzz(0.4); humGain && humGain.gain.setTargetAtTime(0.002, AC.currentTime, 0.05); } }
+  if (game.power && !game.restful) {
+    const gap = game.chase ? rand(3, 6) : NIGHT === 2 ? rand(6, 11) : rand(6, 13), len = game.chase ? rand(0.8, 1.5) : NIGHT === 2 ? rand(2, 3.5) : rand(1.1, 2.0);
+    if (game.blackout > 0) { game.blackout -= dt; if (game.blackout <= 0) { game.blackoutT = gap; SND.buzz(0.25); } }
+    else { game.blackoutT -= dt; if (game.blackoutT <= 0) { game.blackout = len; SND.buzz(0.4); humGain && humGain.gain.setTargetAtTime(0.002, AC.currentTime, 0.05); } }
     if (game.blackout <= 0 && humGain) humGain.gain.setTargetAtTime(0.025, AC.currentTime, 0.2);
   }
   const lit = powerLit();
@@ -1818,6 +2168,7 @@ function updateWorld(dt, t) {
 let deadT = 0, deadCut = false;
 const deadDir = new V3();
 function die() {
+  if (player.hidden) leaveHide(true);
   state = 'dead'; deadT = 0; deadCut = false; shake = 2.5;
   SND.jumpscare(); if (iris.m.face) iris.m.face.visible = true; iris.m.group.visible = true;
   try { speechSynthesis.cancel(); } catch (e) { }
@@ -1836,10 +2187,11 @@ function die() {
 }
 function respawn() {
   $('dead').style.display = 'none'; $('hud').style.display = 'block'; flash.position.set(0.2, -0.18, 0.05);
-  camera.fov = 72; camera.updateProjectionMatrix(); renderer.domElement.style.filter = ''; if (iris.m.face) iris.m.face.visible = false;
+  camera.fov = SETTINGS.fov; camera.updateProjectionMatrix(); renderer.domElement.style.filter = ''; if (iris.m.face) iris.m.face.visible = false;
   $('fade').style.transition = 'opacity 1.6s';
-  if (AC) master.gain.setTargetAtTime(0.9, AC.currentTime, 0.5);
-  player.pos.set(RESPAWN.x, 1.62, RESPAWN.z); player.yaw = RESPAWN.yaw; player.pitch = 0; player.stamina = 1;
+  if (AC) master.gain.setTargetAtTime(SETTINGS.vol, AC.currentTime, 0.5);
+  const cp = checkpoint || (NIGHT === 2 ? SPAWN : RESPAWN);
+  player.pos.set(cp.x, 1.62, cp.z); player.yaw = cp.yaw; player.pitch = 0; player.stamina = 1;
   flowCell = -1; buildFlow();
   updatePlayer(0); camera.updateMatrixWorld();
   if (!teleportHidden(22, 60, true)) irisPlace(cx(40), cz(28));
@@ -1847,15 +2199,60 @@ function respawn() {
   state = 'play'; $('fade').style.opacity = 0;
   lockPointer();
 }
-function endGame() {
+const ENDINGS = {
+  dale: { title: 'CLOSING TIME', lines: ['The shutter groans up. Cold air. Sodium lights humming over an empty parking lot.', 'Behind you, the shutter rattles back down on its own.', 'At 7:00 AM the demolition foreman does the final walkthrough and counts the display figures for the salvage sheet.', 'Thirty-one. Thirty-two. Thirty-three.', 'The new one stands in the atrium window, beside the girl in the red dress. It wears a security uniform. The name tag reads DALE.', 'Both of them are facing the doors.'] },
+  rest: { title: 'CLOSED FOR GOOD', lines: ['You leave her letters on the pedestal: the work order, the poster, her father\'s letter, the janitor\'s count, Dale\'s logs.', 'From the doors you look back. She is standing on it again, hands folded, facing the parking lot.', 'The music box plays one last slow phrase and stops.', 'In the morning the crew finds thirty-two figures and an empty security desk. Someone has taped a card to the pedestal in the atrium window.', 'It says CLOSED.'] },
+  night2: { title: 'LIGHTS OUT', lines: ["You don't stop running until the parking lot. Dale's cassette is still in your hand.", 'At dawn the wrecking ball takes the east wall first. Halvorsen &amp; Co. comes down in one long breath of dust.', 'When it clears, the salvage crew counts the figures in the rubble.', 'Thirty-four.', "The newest one is holding a flashlight. It's still switched on."] },
+};
+function endGame(kind = 'dale') {
+  if (state === 'end') return;
   state = 'end'; $('fade').style.transition = 'opacity 2.5s'; $('fade').style.opacity = 1; $('hud').style.display = 'none';
   try { speechSynthesis.cancel(); } catch (e) { }
   document.exitPointerLock && document.exitPointerLock();
+  if (NIGHT === 1) store.set('closingtime.night2', true);
+  store.del(SAVE_KEY);
+  const E = ENDINGS[kind];
+  $('endText').innerHTML = E.lines.map(l => `<p>${l}</p>`).join(''); $('endTitle').textContent = E.title;
+  $('bToNight2').style.display = NIGHT === 1 ? '' : 'none';
   setTimeout(() => {
     $('end').style.display = 'flex';
-    const ps = [...$('end').querySelectorAll('p,h1,button')];
-    ps.forEach((el, i) => setTimeout(() => el.style.opacity = 1, 600 + i * 2600));
+    const ps = [...$('end').querySelectorAll('p,h1,.row')];
+    ps.forEach((el, i) => setTimeout(() => el.style.opacity = 1, 600 + i * 2400));
   }, 2600);
+}
+
+// ---------- checkpoints ----------
+const SAVE_KEY = 'closingtime.save';
+let checkpoint = null;
+function saveGame() {
+  if (game.prePower || state === 'dead' || player.hidden) return;
+  checkpoint = { x: player.pos.x, z: player.pos.z, yaw: player.yaw };
+  store.set(SAVE_KEY, {
+    v: 1, night: NIGHT, diff: SETTINGS.diff, pos: checkpoint, fuses: player.fuses, battery: player.battery,
+    taken: items.map((it, i) => it.taken ? i : -1).filter(i => i >= 0), notes: [...notesRead],
+    flags: { readDale: game.readDale, leftOffice: game.leftOffice, power: game.power, fusesInstalled: game.fusesInstalled, chase: game.chase, restful: game.restful, daleFound: game.daleFound, gateOpen: game.gateOpen },
+    ev: EV.done, balconyN: EV.balconyN, phoneLine, obj: $('objText').innerHTML,
+  });
+  setTimeout(() => toast('Checkpoint', 1.4), 2600);
+}
+function applySave(sv) {
+  game.prePower = false; game.cutT = 99;
+  Object.assign(game, sv.flags);
+  for (const i of sv.taken) { const it = items[i]; if (it && !it.taken) { it.taken = true; if (it.kind === 'fuse' || it.kind === 'battery') scene.remove(it.mesh); } }
+  player.fuses = sv.fuses; $('fuseCount').textContent = player.fuses;
+  notesRead = new Set(sv.notes); phoneLine = sv.phoneLine || 0;
+  Object.assign(EV.done, sv.ev || {}); EV.balconyN = sv.balconyN || 0; if (EV.done.hands) hands.forEach(h => h.visible = true);
+  player.battery = sv.battery; player.flashOn = true;
+  if (NIGHT === 1) gate.position.y = game.gateOpen ? WH - 0.4 : 0;
+  if (game.gateOpen) for (let y = 14; y <= 17; y++) set(1, y, FLOOR);
+  if (game.power) { breakerLights.forEach(m => m.emissive.setHex(0x30ff40)); if (humGain) humGain.gain.value = 0.025; }
+  if (game.restful) showRestingIris();
+  player.pos.set(sv.pos.x, 1.62, sv.pos.z); player.yaw = sv.pos.yaw; checkpoint = sv.pos;
+  setObj(sv.obj || '');
+  flowCell = -1; buildFlow(); updatePlayer(0); camera.updateMatrixWorld();
+  iris.active = game.readDale && game.leftOffice && !game.restful; iris.scripted = 3; iris.graceT = 5;
+  if (iris.active && !teleportHidden(22, 60, true)) irisPlace(cx(40), cz(28));
+  iris.mode = game.chase ? 'hunt' : 'lurk'; iris.modeT = game.chase ? 999 : 10; iris.appearT = 20;
 }
 
 // =====================================================================
@@ -1876,41 +2273,104 @@ document.addEventListener('pointerlockerror', () => { noLock = true; lockHint();
 document.addEventListener('pointerlockchange', () => {
   if (!document.pointerLockElement && state === 'play' && !reading && !noLock) { paused = true; $('pause').style.display = 'flex'; }
 });
-$('pause').addEventListener('click', () => { paused = false; $('pause').style.display = 'none'; lockPointer(); });
+
 $('dead').addEventListener('click', respawn);
-addEventListener('mousedown', e => { dragging = true; if (state === 'play' && !paused && !reading && document.pointerLockElement && e.button === 0) interact(); });
-addEventListener('mouseup', () => { dragging = false; });
+addEventListener('mousedown', e => {
+  dragging = true; if (e.button === 2) keys.Mouse2 = true;
+  if (state === 'play' && !paused && !reading && document.pointerLockElement && e.button === 0) interact();
+});
+addEventListener('mouseup', e => { dragging = false; if (e.button === 2) keys.Mouse2 = false; });
+addEventListener('contextmenu', e => { if (state === 'play') e.preventDefault(); });
 addEventListener('mousemove', e => {
   if (state !== 'play' || paused || reading) return;
   if (!document.pointerLockElement && !noLock) return;
-  player.yaw -= e.movementX * 0.0022; player.pitch = clamp(player.pitch - e.movementY * 0.0022, -1.35, 1.35);
+  const k = 0.0022 * SETTINGS.sens;
+  player.yaw -= e.movementX * k; player.pitch = clamp(player.pitch - e.movementY * k * (SETTINGS.invert ? -1 : 1), -1.35, 1.35);
 });
 addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (state !== 'play' || paused) return;
+  if (e.code === 'Space' && state === 'play') e.preventDefault();
+  if (state !== 'play') return;
+  if (e.code === 'Escape' && !reading && noLock) { paused ? resumeGame() : pauseGame(); return; }
+  if (paused) return;
   if (e.code === 'KeyE') { if (reading) closeNote(); else interact(); }
   if (e.code === 'Escape' && reading) closeNote();
-  if (e.code === 'KeyF' && !reading) { player.flashOn = !player.flashOn; if (AC) tone('square', 1800, AC.currentTime, 0.001, 0.04, 0.03, sfx); }
+  if (e.code === 'KeyF' && !reading) toggleFlash();
 });
+function toggleFlash() { if (player.hidden) return; player.flashOn = !player.flashOn; if (AC) tone('square', 1800, AC.currentTime, 0.001, 0.04, 0.03, sfx); }
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
-$('title').addEventListener('click', () => {
+// ---------- menus & settings ----------
+function applySettings() {
+  renderer.toneMappingExposure = SETTINGS.bright;
+  if (state !== 'dead') { camera.fov = SETTINGS.fov; camera.updateProjectionMatrix(); }
+  if (master && state !== 'dead') master.gain.value = SETTINGS.vol;
+  DIFF = DIFFS[SETTINGS.diff] || DIFFS.normal;
+  $('diffTag').textContent = SETTINGS.diff.toUpperCase();
+  document.querySelectorAll('#diffRow .btn').forEach(b => b.classList.toggle('sel', b.dataset.diff === SETTINGS.diff));
+  store.set('closingtime.settings', SETTINGS);
+}
+function openSettings() {
+  $('sSens').value = SETTINGS.sens; $('sVol').value = SETTINGS.vol; $('sBright').value = SETTINGS.bright; $('sFov').value = SETTINGS.fov; $('sInvert').checked = SETTINGS.invert;
+  $('settings').style.display = 'flex';
+}
+for (const [id, key] of [['sSens', 'sens'], ['sVol', 'vol'], ['sBright', 'bright'], ['sFov', 'fov']]) $(id).addEventListener('input', e => { SETTINGS[key] = parseFloat(e.target.value); applySettings(); });
+$('sInvert').addEventListener('change', e => { SETTINGS.invert = e.target.checked; applySettings(); });
+$('bBack').onclick = () => { $('settings').style.display = 'none'; };
+document.querySelectorAll('#diffRow .btn').forEach(b => b.onclick = () => { SETTINGS.diff = b.dataset.diff; applySettings(); });
+$('bSettingsT').onclick = openSettings;
+$('bSettingsP').onclick = openSettings;
+function pauseGame() { if (state !== 'play' || paused) return; paused = true; $('pause').style.display = 'flex'; document.exitPointerLock && document.exitPointerLock(); }
+function resumeGame() { paused = false; $('pause').style.display = 'none'; $('settings').style.display = 'none'; lockPointer(); }
+$('bResume').onclick = resumeGame;
+$('bLoad').onclick = () => location.reload();
+$('bQuit').onclick = () => location.reload();
+$('bAgain').onclick = () => { location.href = location.pathname + (NIGHT === 2 ? '?night=2' : ''); };
+$('bToNight2').onclick = () => { location.href = location.pathname + '?night=2'; };
+$('bNight2').onclick = () => { location.href = location.pathname + '?night=2'; };
+$('bNew').onclick = () => startGame(null);
+$('bContinue').onclick = () => {
+  const sv = store.get(SAVE_KEY, null); if (!sv) return;
+  if (sv.night !== NIGHT) { location.href = location.pathname + (sv.night === 2 ? '?night=2' : ''); return; }
+  startGame(sv);
+};
+{ // title screen state
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && sv.v === 1) $('bContinue').style.display = '';
+  if (NIGHT === 1 && store.get('closingtime.night2', false)) $('bNight2').style.display = '';
+}
+function startGame(sv) {
   initAudio(); AC.resume();
   try { speechSynthesis.getVoices(); } catch (e) { }
   $('title').style.display = 'none';
-  $('intro').style.opacity = 1;
   lockPointer();
+  if (sv) {
+    if (sv.diff && DIFFS[sv.diff]) { SETTINGS.diff = sv.diff; applySettings(); }
+    applySave(sv);
+    state = 'play'; $('hud').style.display = 'block'; $('fade').style.opacity = 0;
+    if (game.power && humGain) humGain.gain.setTargetAtTime(0.025, AC.currentTime, 0.5);
+    return;
+  }
+  store.del(SAVE_KEY);
+  $('intro').style.opacity = 1;
   state = 'intro';
   setTimeout(() => { $('intro').style.opacity = 0; }, 9000);
   setTimeout(() => {
     state = 'play'; $('hud').style.display = 'block'; $('fade').style.opacity = 0;
-    setObj('Clock in at the SECURITY office, north-west corner');
     humGain.gain.setTargetAtTime(0.025, AC.currentTime, 0.5);
+    if (NIGHT === 2) {
+      setObj('Find Dale. HALVORSEN &amp; CO., east end of the mall');
+      setTimeout(() => pa('Welcome back to the Halvorsen Galleria. We knew you would come back.'), 2500);
+      return;
+    }
+    setObj('Clock in at the SECURITY office, north-west corner');
     startMuzak();
     setTimeout(() => pa('Good evening. The Halvorsen Galleria is now closed. Thank you for shopping with us.'), 2500);
   }, 10200);
-});
+}
+if (NIGHT === 2) setupNight2();
+applySettings();
 
 // =====================================================================
 // LOOP
@@ -1920,6 +2380,7 @@ updatePlayer(0); buildFlow();
 renderer.setAnimationLoop(() => {
   const now = performance.now(); const dt = Math.min(0.05, (now - last) / 1000); last = now; gT += dt;
   grainAcc += dt; if (grainAcc > 0.05) { grainAcc = 0; grainTick(); }
+  pollPad(dt);
   if (state === 'play' && !paused && !reading) {
     updatePlayer(dt);
     camera.updateMatrixWorld();
@@ -1949,7 +2410,7 @@ renderer.setAnimationLoop(() => {
       camera.position.set(player.pos.x + rand(-1, 1) * s, 1.62 + rand(-1, 1) * s, player.pos.z + rand(-1, 1) * s);
       camera.lookAt(h.x, h.y + p.y - oldY, h.z);
       camera.rotation.z += rand(-0.09, 0.09) * shake;
-      camera.fov = 72 - 20 * k + rand(-3, 3); camera.updateProjectionMatrix();
+      camera.fov = SETTINGS.fov - 20 * k + rand(-3, 3); camera.updateProjectionMatrix();
       shake = Math.max(0.9, shake - dt * 1.2);
       const on = Math.floor(deadT * 22) % 2 === 0; // strobing flashlight
       flash.intensity = on ? 7 : 0.6; bounce.intensity = on ? 0.15 : 0;
@@ -1968,10 +2429,11 @@ renderer.setAnimationLoop(() => {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').style.opacity = 0; }
   $('batBar').firstElementChild.style.width = (player.battery * 100).toFixed(1) + '%';
   $('stamBar').firstElementChild.style.width = (player.stamina * 100).toFixed(1) + '%';
+  if (player.hidden) $('breathBar').firstElementChild.style.width = (player.breath * 100).toFixed(1) + '%';
   renderer.render(scene, camera);
 });
 // debug hook for testing
-window.__g = { EV, shade, lamps, hands, decoys, renderer, scene, player, iris, game, items, stores, teleportHidden, ambush, die, respawn, interact, openNote, closeNote, powerUp, openGate, camera, setObj, get state() { return state; }, set state(v) { state = v; } };
+window.__g = { hideSpots, ghost, saveGame, applySave, enterHide, leaveHide, layToRest, night2Escape, endGame, startGame, pad, get notesRead() { return notesRead; }, SETTINGS, NIGHT, EV, shade, lamps, hands, decoys, renderer, scene, player, iris, game, items, stores, teleportHidden, ambush, die, respawn, interact, openNote, closeNote, powerUp, openGate, camera, setObj, get state() { return state; }, set state(v) { state = v; } };
 </script>
 </body>
 </html>
